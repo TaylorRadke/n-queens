@@ -1,21 +1,33 @@
 from random import randrange
 import queue
+import collections
+
+
+
+class Queen(tuple):
+    def __init__(self,i):
+        super().__init__()
+    
+    def __eq__(self,other):
+        return (self[0] == other[0] and self[1] == other[1])
 
 class BOARDSTATE(object):
-# Board is a class used to hold states of the n-queens positions
-# stored as tuple (row,column,moved) on n * n board
-# As in:
-#       0   1    2   3  ...  n
-#   0  (0,0)                (0,n)
-#   1       (1,1)
-#   2           (2,2)
-#   3               (3,3)
-#   ...                 (...)
-#   n  (n,0)                (n,n)
+    """Board is a class used to hold states of the n-queens positions
+    stored as tuple derived queen piece (row,column,moved) on n * n board"""
 
     def __init__(self,n):
         self.n = n
         self.state = []
+
+    def print_state(self):
+        for i in range(self.n):
+            for j in range(self.n):
+                if (i,j) in self.state:
+                    print("Q",end=" ")
+                else:
+                    print("I",end=" ")
+                if j == self.n-1:
+                    print("\n")
 
     def __eq__(self,other):
         return self.state == other.get_state()
@@ -77,16 +89,43 @@ class LEAFNODE(object):
         self.parent = parent
         self.state = state
         self.actions = []
+    #    self.state_space = []
 
-    def legal_state_actions(self):
+    # def enumerate_state_space(self):
+    #     states = []
+    #     n = self.state.get_n()
+    #     #generate n * n of queens
+    #     for i in range(n):
+    #         for j in range(n):
+    #             states.append((i,j))
+        
+    #     return states
+
+    # def get_state_space(self):
+    #     return self.state_space
+    
+    # def enumarate_legal_state_action(self):
+    #     n = self.state.get_n()
+    #     current_state = self.state.get_state()
+    #     for queen in current_state:
+    #         # Remove all actions where there is currently a queen
+    #         for i in self.state_space:
+    #             pass
+
+
+
+    def enumerate_legal_state_actions(self):
+        state = self.state.get_state()
+        queen_state = [Queen(i) for i in state]
+        n = self.state.get_n()
+        
         for queens in self.state.get_state():
             if queens[2] == False: #Queen hasn't moved yet
                 row = queens[0]
                 column = queens[1]
-                
                 #Find legal moves to left
-                while row != 0:
-                    if (row-1,column) not in self.state.get_state():
+                while row != 0: 
+                    if Queen((row-1,column)) not in queen_state:
                         self.actions.append({queens:(row-1,column,True)})
                         row -= 1
                     else:
@@ -94,8 +133,8 @@ class LEAFNODE(object):
 
                 row = queens[0]
                 #Find legal moves to right
-                while row != self.state.get_n()-1:
-                    if (row+1,column) not in self.state.get_state():
+                while row != n-1:
+                    if (row+1,column) not in queen_state:
                         self.actions.append({queens:(row+1,column,True)})
                         row += 1
                     else:
@@ -103,7 +142,7 @@ class LEAFNODE(object):
                 row = queens[0]
                 #Find legal moves up
                 while column != 0:
-                    if (row,column-1) not in self.state.get_state():
+                    if (row,column-1) not in queen_state:
                         self.actions.append({queens:(row,column-1,True)})
                         column -= 1
                     else:
@@ -111,13 +150,56 @@ class LEAFNODE(object):
 
                 #Find legal moves down
                 column = queens[1]
-                while column != self.state.get_n()-1:
-                    if (row,column+1) not in self.state.get_state():
+                while column != n-1:
+                    if (row,column+1) not in queen_state:
                         self.actions.append({queens:(row,column+1,True)})
                         column += 1
                     else:
                         break
-        print(self.actions)
+
+                #Find legal diagonal moves up and left
+                row = queens[0]
+                columns = queens[1]
+                while row != 0 and column != 0:
+                    if (row-1,column-1) not in queen_state:
+                        self.actions.append({queens:(row-1,column-1,True)})
+                        row -= 1
+                        column -= 1
+                    else:
+                        break
+
+                row = queens[0]
+                columns = queens[1]
+                #Find legal diagonal moves up and right
+                while row != 0 and column != n-1:
+                    if (row-1,column+1) not in queen_state:
+                        self.actions.append({queens:(row-1,column+1,True)})
+                        row -= 1
+                        column += 1
+                    else:
+                        break
+                
+                #Find legal diagonal moves down and left
+                row = queens[0]
+                column = queens[1]
+                while row != n-1 and column != 0:
+                    if (row+1,column-1) not in queen_state:
+                        self.actions.append({queens:(row+1,column-1,True)})
+                        row += 1
+                        column -=1
+                    else:
+                        break
+
+                #Find legal diagonal moves down and right
+                row = queens[0]
+                column = queens[1]
+                while row != n-1 and column != n-1:
+                    if  (row+1,column+1) not in queen_state:
+                        self.actions.append({queens:(row+1,column+1,True)})
+                        row += 1
+                        column += 1
+                    else:
+                        break
 
     def get_actions(self):
         return self.actions
