@@ -12,18 +12,21 @@ class STATE(object):
     """STATE is a class used to hold states of the n-queens positions
     stored as tuple derived queen piece (row,column,moved) on n * n board"""
 
-    def __init__(self,n,initial_state):
+    def __init__(self,n,initial_state=None):
         self.n = n
         self.state = initial_state
         self.actions = []
         if self.state == None:
             self.state = []
             self.create_random_initial_state()
-    
+        
         self.queen_state_space = self.enumerate_queen_state_space()
+
         self.state_space = self.enumerate_state_space()
-        self.cull_state_space = self.enumerate_state_space_and_cull()
-        self.state_row_map, self.state_col_map, self.queen_row_map, self.queen_col_map = self.map_states() 
+        self.culled_state_space = self.enumerate_state_space_and_cull()
+
+        self.state_row_map, self.state_col_map = self.map_states(self.culled_state_space)
+        self.queen_row_map, self.queen_col_map = self.map_states(self.state)
 
     def __eq__(self,other):
         return self.state in all(other.get_state())
@@ -66,36 +69,26 @@ class STATE(object):
 
     def enumerate_state_space_and_cull(self):
         state_space = []
-        #generate n * n of queens from (0,0) to (n,n)
         for i in range(self.n):
             for j in range(self.n):
-                # Don't add a state where a queen already is
-                if Queen((i,j)) not in self.queen_state_space:
+                if Queen((i,j)) not in self.state:
                     state_space.append((i,j))
         return state_space
 
     def enumerate_queen_state_space(self):
         return [Queen(i) for i in self.state]
 
-    def map_states(self):
-        states = self.cull_state_space
-        queens = self.state
+    def map_states(self,state_to_map):
+        states = state_to_map[:]
 
         map_state_space_rows = [[] for i in range(self.n)]
         map_state_space_cols = [[] for i in range(self.n)]
-
-        map_queen_rows = [[] for i in range(self.n)]
-        map_queen_cols = [[] for i in range(self.n)]
 
         for i in states:
             map_state_space_rows[i[0]].append(i[1])
             map_state_space_cols[i[1]].append(i[0])
 
-        for i in queens:
-            map_queen_rows[i[0]].append(i[1])
-            map_queen_cols[i[1]].append(i[0])
-
-        return map_state_space_rows,map_state_space_cols,map_queen_rows,map_queen_cols
+        return map_state_space_rows,map_state_space_cols
 
     def queens_diagonal(self,a,b):
             row_diff = abs(a[0] - b[0])
@@ -176,13 +169,9 @@ class STATE(object):
         """
         Finds all possible legal moves for each queen on the board
         """
-
-        queens = self.state
-        states = self.cull_state_space
-        print(self.state_space)
-        print(self.cull_state_space)
-        for queen in queens[:1]:
-           # print(queen)
+        states = self.culled_state_space
+        legal_moves = []
+        for queen in self.state:
             transitions = []
             for state in states:
                 #Add transition if on same row
@@ -197,6 +186,10 @@ class STATE(object):
                 elif self.queens_diagonal(queen,state):
                     if not self.diagonal_move_blocked(queen,state):
                         transitions.append((state[0],state[1],True))
+            # Map current state to next state          
+            for move in transitions:
+                legal_moves.append({queen:move})
+        return legal_moves
             
 
             

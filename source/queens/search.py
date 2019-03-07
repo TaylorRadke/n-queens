@@ -25,13 +25,9 @@ class SEARCH(object):
         return self.goal_reached
 
 class LEAFNODE(object):
-    def __init__(self,parent,state):
+    def __init__(self,parent,initial_state):
         self.parent = parent
-        self.state = state
-        self.actions = []
-
-    def get_actions(self):
-        return self.actions
+        self.initial_state = initial_state
     
 
 
