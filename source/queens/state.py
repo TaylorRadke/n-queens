@@ -15,7 +15,7 @@ class STATE(object):
     def __init__(self,n,initial_state):
         self.n = n
         self.state = initial_state
-
+        self.actions = []
         if self.state == None:
             self.state = []
             self.create_random_initial_state()
@@ -107,8 +107,21 @@ class STATE(object):
         Finds all possible legal moves for each queen on the board
         """
 
-        print(self.state_space)
+        queens = self.state
+        states = self.state_space
         
+        for queen in queens[:-1]:
+            possible_moves = []
+
+            for state in states:
+                if state[0] == queen[0] or state[1] == queen[1]:
+                    possible_moves.append(state)
+                if self.queens_diagonal(queen,state):
+                    possible_moves.append(state)
+
+            print(possible_moves)
+            
+
                 
                 
                         
