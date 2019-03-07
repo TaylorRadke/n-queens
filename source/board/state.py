@@ -18,8 +18,8 @@ class STATE(object):
         self.state_space = self.enumerate_state_space()
         self.queen_state_space = None
 
-    def enumerate_queen_state_space(self):
-        self.queen_state_space = [Queen(i) for i in self.state]
+    def __eq__(self,other):
+        return self.state in all(other.get_state())
 
     def print_state(self):
         q_state = self.queen_state_space
@@ -32,9 +32,6 @@ class STATE(object):
                 if j == self.n-1:
                     print("\n")
 
-    def __eq__(self,other):
-        return self.state in all(other.get_state())
-        
     def get_state(self):
         return self.state
     
@@ -66,6 +63,9 @@ class STATE(object):
                 states.append((i,j))
         return states
 
+    def enumerate_queen_state_space(self):
+        self.queen_state_space = [Queen(i) for i in self.state]
+        
     def state_in_conflict(self):
         """Check if self state in conflict, returns True when any queen 
         can attack any other, otherwise returns False(goal reached)"""

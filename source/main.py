@@ -5,8 +5,8 @@ def main():
     n = 4
 
     state1 = state.STATE(n)
-    state1.create_random_initial_state()
-    
+    state1.set_state([(0,0),(1,1),(2,2),(3,3)])
+    state1.print_state()
 
 
    
