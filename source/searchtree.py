@@ -83,18 +83,38 @@ class LEAFNODE(object):
             if queens[2] == False: #Queen hasn't moved yet
                 row = queens[0]
                 column = queens[1]
-
+                
+                #Find legal moves to left
                 while row != 0:
                     if (row-1,column) not in self.state.get_state():
                         self.actions.append({queens:(row-1,column,True)})
                         row -= 1
                     else:
                         break
+
                 row = queens[0]
-                while row != self.state.get_n():
+                #Find legal moves to right
+                while row != self.state.get_n()-1:
                     if (row+1,column) not in self.state.get_state():
                         self.actions.append({queens:(row+1,column,True)})
                         row += 1
+                    else:
+                        break
+                row = queens[0]
+                #Find legal moves up
+                while column != 0:
+                    if (row,column-1) not in self.state.get_state():
+                        self.actions.append({queens:(row,column-1,True)})
+                        column -= 1
+                    else:
+                        break
+
+                #Find legal moves down
+                column = queens[1]
+                while column != self.state.get_n()-1:
+                    if (row,column+1) not in self.state.get_state():
+                        self.actions.append({queens:(row,column+1,True)})
+                        column += 1
                     else:
                         break
         print(self.actions)
