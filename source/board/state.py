@@ -12,11 +12,16 @@ class STATE(object):
     """STATE is a class used to hold states of the n-queens positions
     stored as tuple derived queen piece (row,column,moved) on n * n board"""
 
-    def __init__(self,n):
+    def __init__(self,n,initial_state):
         self.n = n
-        self.state = []
+        self.state = initial_state
+
+        if self.state == None:
+            self.state = []
+            self.create_random_initial_state()
+    
+        self.queen_state_space = self.enumerate_queen_state_space()
         self.state_space = self.enumerate_state_space()
-        self.queen_state_space = None
 
     def __eq__(self,other):
         return self.state in all(other.get_state())
@@ -55,23 +60,20 @@ class STATE(object):
         self.create_random_initial_state()
 
     def enumerate_state_space(self):
-        states = []
+        state_space = []
         n = self.n
         #generate n * n of queens from (0,0) to (n,n)
         for i in range(n):
             for j in range(n):
-                states.append((i,j))
-        return states
+                # Don't add a state where a queen already is
+                if Queen((i,j)) not in self.queen_state_space:
+                    state_space.append((i,j))
+        return state_space
 
     def enumerate_queen_state_space(self):
-        self.queen_state_space = [Queen(i) for i in self.state]
-        
-    def state_in_conflict(self):
-        """Check if self state in conflict, returns True when any queen 
-        can attack any other, otherwise returns False(goal reached)"""
+        return [Queen(i) for i in self.state]
 
-        # Check rows/columns in conflict
-        def diagonal_difference(a,b):
+    def queens_diagonal(self,a,b):
             row_diff = abs(a[0] - b[0])
             col_diff = abs(a[1] - b[1])
 
@@ -80,9 +82,15 @@ class STATE(object):
             else:
                 return False
 
+    def state_in_conflict(self):
+        """Check if self state in conflict, returns True when any queen 
+        can attack any other, otherwise returns False(goal reached)"""
+
+        # Check rows/columns in conflict
+
         for i in range(0,len(self.state)-1):
             for j in range(i+1,len(self.state)):
-                    #Check Rows in conflict
+                #Check Rows in conflict
                 if self.state[i][0] == self.state[j][0]:
                     return True
                 #Check Columns in conflict
@@ -90,13 +98,19 @@ class STATE(object):
                     return True
                 #Check Diagonals in conflict
                 else:
-                    if diagonal_difference(self.state[i],self.state[j]):
+                    if self.queens_diagonal(self.state[i],self.state[j]):
                         return True
         return False
 
     def enumerate_legal_successor_states(self):
-        current_state = self.state
-        for queen in current_state:
-            # Remove all actions where there is currently a queen
-            for i in self.state_space:
-                pass
+        """
+        Finds all possible legal moves for each queen on the board
+        """
+
+        print(self.state_space)
+        
+                
+                
+                        
+
+

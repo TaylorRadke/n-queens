@@ -4,11 +4,9 @@ import board.search as search
 def main():
     n = 4
 
-    state1 = state.STATE(n)
-    state1.set_state([(0,0),(1,1),(2,2),(3,3)])
+    state1 = state.STATE(n,None)
     state1.print_state()
-
-
-   
+    state1.enumerate_legal_successor_states()
+    
 if __name__ == "__main__": 
     main()
