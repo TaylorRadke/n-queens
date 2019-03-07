@@ -22,6 +22,7 @@ class STATE(object):
     
         self.queen_state_space = self.enumerate_queen_state_space()
         self.state_space = self.enumerate_state_space()
+        self.cull_state_space = self.enumerate_state_space_and_cull()
         self.state_row_map, self.state_col_map, self.queen_row_map, self.queen_col_map = self.map_states() 
 
     def __eq__(self,other):
@@ -40,10 +41,6 @@ class STATE(object):
 
     def get_state(self):
         return self.state
-    
-    def set_state(self,new_state):
-        self.state = new_state
-        self.enumerate_queen_state_space()
 
     def get_n(self):
         return self.n
@@ -62,10 +59,16 @@ class STATE(object):
 
     def enumerate_state_space(self):
         state_space = []
-        n = self.n
+        for i in range(self.n):
+            for j in range(self.n):
+               state_space.append((i,j))
+        return state_space
+
+    def enumerate_state_space_and_cull(self):
+        state_space = []
         #generate n * n of queens from (0,0) to (n,n)
-        for i in range(n):
-            for j in range(n):
+        for i in range(self.n):
+            for j in range(self.n):
                 # Don't add a state where a queen already is
                 if Queen((i,j)) not in self.queen_state_space:
                     state_space.append((i,j))
@@ -75,7 +78,7 @@ class STATE(object):
         return [Queen(i) for i in self.state]
 
     def map_states(self):
-        states = self.state_space
+        states = self.cull_state_space
         queens = self.state
 
         map_state_space_rows = [[] for i in range(self.n)]
@@ -109,8 +112,8 @@ class STATE(object):
 
         # Check rows/columns in conflict
 
-        for i in range(0,len(self.state)-1):
-            for j in range(i+1,len(self.state)):
+        for i in range(0,self.n-1):
+            for j in range(i+1,self.n):
                 #Check Rows in conflict
                 if self.state[i][0] == self.state[j][0]:
                     return True
@@ -128,11 +131,9 @@ class STATE(object):
         for i in self.queen_row_map[row]:
             # Left move blocked
             if i > new_col and i < curr_col:
-                print("Blocked left")
                 return True
             # Right move blocked
             elif i < new_col and i > curr_col:
-                print("Blocked right")
                 return True
         return False
 
@@ -148,29 +149,54 @@ class STATE(object):
                 return True
         return False
 
+    def diagonal_move_blocked(self,curr_pos, new_pos):
+        states = self.state_space
+        diagonal = [x for x in states if self.queens_diagonal(curr_pos,x)]
+        # print("diagonals:",diagonal)
+        for state in diagonal:
+            # Check if blocking up
+            if state[0] > curr_pos[0] and state[0] < new_pos[0]:
+                # Check blocking up left
+                if state[1] < curr_pos[1] and state[0] > new_pos[1]:
+                    return True
+                # Check Blocking up right
+                elif state[1] > curr_pos[1] and state[0] < new_pos[1]:
+                    return True
+            # Check blocking down
+            elif state[0] < curr_pos[0] and state[1] > new_pos[1]:
+                # Check blocking down left
+                if state[1] < curr_pos[1] and state[0] > new_pos[1]:
+                    return True
+                #Check blocking down right
+                elif state[1] > curr_pos[1] and state[0] < new_pos[1]:
+                    return True
+        return False
+
     def enumerate_legal_successor_states(self):
         """
         Finds all possible legal moves for each queen on the board
         """
 
         queens = self.state
-        states = self.state_space
-
-        for queen in queens[0:1]:
-            print(queen)
+        states = self.cull_state_space
+        print(self.state_space)
+        print(self.cull_state_space)
+        for queen in queens[:1]:
+           # print(queen)
             transitions = []
             for state in states:
                 #Add transition if on same row
                 if state[0] == queen[0]:
                     if not self.row_move_blocked(queen[0],queen[1],state[1]):
-                        transitions.append(state)
+                        transitions.append((state[0],state[1],True))
                 #Add transition if in same column
                 elif state[1] == queen[1]:
                     if not self.col_move_blocked(queen[1],queen[0],state[0]):
-                        transitions.append(state)
+                        transitions.append((state[0],state[1],True))
                 #Add transition if diagonal
-                # elif self.queens_diagonal(queen,state):
-                #     transitions.append(state)
+                elif self.queens_diagonal(queen,state):
+                    if not self.diagonal_move_blocked(queen,state):
+                        transitions.append((state[0],state[1],True))
             
 
             
