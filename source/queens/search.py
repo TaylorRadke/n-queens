@@ -34,16 +34,16 @@ class LeafNode(object):
         self.enumerated_states = self.initial_state.enumerate_legal_successor_states()
         for state in self.state:
             for transition in self.enumerated_states:
-                new_state = self.state.copy()
+                if state in transition:
+                    new_state = self.state.copy()
+                    #Pop current position
+                    new_state.pop(new_state.index(state))
+                    #Push new position
+                    new_state.append(transition[state])
 
-                #Pop current position
-                new_state.pop(new_state.index(state))
-                #Push new position
-                new_state.append(transition[state])
-
-                new_state = State(self.n,new_state)
-                new_leaf = LeafNode(self.tree,self,new_state)
-                self.tree.enqueue_frontier(new_leaf)
+                    new_state = State(self.n,new_state)
+                    new_leaf = LeafNode(self.tree,self,new_state)
+                    self.tree.enqueue_frontier(new_leaf)
 
 class BFS(SEARCH):
     """Frontier contains node leafs"""
@@ -60,7 +60,7 @@ class BFS(SEARCH):
         state = State(self.n)
         self.initial_state = LeafNode(self,None,state)
         self.initial_state.get_node_state().print_state()
-        
+        print('\n')
 
     def search(self):
         if not self.frontier.empty():

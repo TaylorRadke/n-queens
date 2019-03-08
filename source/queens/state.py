@@ -1,12 +1,12 @@
 from random import randrange
 
-class Queen(tuple):
-    """A class inherited from tuple to redefine how tuples are compared to only check for queen row, column and not if moved"""
-    def __init__(self,tup):
-        super().__init__()
+# class Queen(tuple):
+#     """A class inherited from tuple to redefine how tuples are compared to only check for queen row, column and not if moved"""
+#     def __init__(self,tup):
+#         super().__init__()
     
-    def __eq__(self,other):
-        return (self[0] == other[0] and self[1] == other[1])
+#     def __eq__(self,other):
+#         return (self[0] == other[0] and self[1] == other[1])
 
 class State(object):
     """STATE is a class used to hold states of the n-queens positions
