@@ -50,31 +50,22 @@ class State(object):
         self.create_random_initial_state()
 
     def enumerate_state_space(self):
-        state_space = []
-        for i in range(self.n):
-            for j in range(self.n):
-               state_space.append((i,j))
-        return state_space
+        return [(i,j) for i in range(self.n) for j in range(self.n)]
 
     def enumerate_state_space_and_cull(self):
         """Creates an array with tuples from (0,0) to (n,n) then removes all tuples where a queen already exists"""
-        state_space = []
-        for i in range(self.n):
-            for j in range(self.n):
-                if (i,j) not in self.state:
-                    state_space.append((i,j))
-        return state_space
+        return [(i,j) for i in range(self.n) for j in range(self.n) if (i,j) not in self.state]
 
     def map_states(self,state_to_map):
-        states = state_to_map[:]
+        states = state_to_map.copy()
 
         map_state_space_rows = [[] for i in range(self.n)]
-        map_state_space_cols = [[] for i in range(self.n)]
+        map_state_space_cols = map_state_space_rows.copy()
 
         for i in states:
             map_state_space_rows[i[0]].append(i[1])
             map_state_space_cols[i[1]].append(i[0])
-
+        
         return map_state_space_rows,map_state_space_cols
 
     def queens_diagonal(self,a,b):
@@ -88,7 +79,6 @@ class State(object):
         can attack any other, otherwise returns False(goal reached)"""
 
         # Check rows/columns in conflict
-
         for i in range(0,self.n-1):
             for j in range(i+1,self.n):
                 #Check Rows in conflict
@@ -99,7 +89,7 @@ class State(object):
                     return True
                 #Check Diagonals in conflict
                 else:
-                    if self.queens_diagonal(self.state[i],self.state[j]):
+                    if bool(self.queens_diagonal(self.state[i],self.state[j])):
                         return True
         return False
 
@@ -149,12 +139,12 @@ class State(object):
                     return True
         return False
 
-    def enumerate_legal_successor_states(self):
+    def enumerate_actions(self):
         """
         Finds all possible legal moves for each queen on the board
         """
         states = self.culled_state_space.copy()
-        legal_moves = []
+        actions = []
         for queen in self.state:
             transitions = []
             for state in states:
@@ -172,8 +162,8 @@ class State(object):
                         transitions.append((state[0],state[1]))
             # Map current state to next states        
             for move in transitions:
-                legal_moves.append({queen:move})
-        return legal_moves
+                actions.append({queen:move})
+        return actions
             
 
             

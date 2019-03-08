@@ -1,5 +1,7 @@
 from queue import Queue
 from queens.state import State
+import pickle
+import zlib
 
 class SEARCH(object):
     def __init__(self,n,initial_state=None):
@@ -17,10 +19,13 @@ class SEARCH(object):
     def initialise_state(self):
         return Leaf(self,State(self.n))
 
+    def print_solution(self):
+        print(self.solution.print_state())
+
     def add_explored_state(self,state):
         self.explored.add(hash(frozenset(state)))
 
-    def state_exists(self,state):
+    def state_explored(self,state):
         #Check if hash of state in explored
         if hash(frozenset(state)) not in self.explored:
             return False
@@ -31,6 +36,8 @@ class SEARCH(object):
         self.goal_reached = True
 
 class Leaf(object):
+    __slots__ = ["tree","parent","state","n"]
+
     def __init__(self,tree,parent):
         self.tree = tree
         self.parent = parent
@@ -47,9 +54,10 @@ class Leaf(object):
         return self.state
 
     def map_new_state(self):
-        self.enumerated_states = self.parent.enumerate_legal_successor_states()
+        enumerated_states = self.parent.enumerate_actions()
         for state in self.state:
-            for transition in self.enumerated_states:
+            for transition in enumerated_states:
+                #If queen has a legal move
                 if state in transition:
                     new_state = self.state.copy()
                     #Pop current position
@@ -58,13 +66,13 @@ class Leaf(object):
                     new_state.append(transition[state])
 
                     #Check if state not in frontier or explored
-                    if not self.tree.state_exists(new_state):
-                        #Add new node to frontier
+                    if self.tree.state_explored(new_state):
                         c_state = State(self.n,new_state)
 
                         #Check if state is a solution
                         if not c_state.state_in_conflict():
                             self.tree.found_solution(c_state)
+                        #Add new node to frontier queue
                         self.tree.enqueue_frontier(Leaf(self.tree,c_state))
 
 class BFS(SEARCH):
@@ -78,6 +86,7 @@ class BFS(SEARCH):
     def search(self):
         """Performs the breadth-first to find a solution to the initial state"""
         while not self.goal_reached and not self.frontier.empty():
+            print("Queue size: {}\nExplored States: {}\n,Queue Memeory: {}".format(self.frontier.qsize(),len(self.explored),self.frontier.__sizeof__()),end='\r')
             leaf = self.frontier.get()
             self.add_explored_state(leaf.get_state())
             leaf.map_new_state()
@@ -85,7 +94,9 @@ class BFS(SEARCH):
         if (self.frontier.empty()):
             print("No solution")
         else:
-            print(self.solution.print_state())
+            print(self.solution.get_state())
+            print(self.frontier.qsize())
+        print(len(self.explored))
 
     def enqueue_frontier(self,node):
         self.frontier.put(node)
