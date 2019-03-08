@@ -19,7 +19,7 @@ class STATE(object):
         if self.state == None:
             self.state = []
             self.create_random_initial_state()
-        
+        self.state = sorted(self.state)
         self.queen_state_space = self.enumerate_queen_state_space()
 
         self.state_space = self.enumerate_state_space()
@@ -186,7 +186,7 @@ class STATE(object):
                 elif self.queens_diagonal(queen,state):
                     if not self.diagonal_move_blocked(queen,state):
                         transitions.append((state[0],state[1],True))
-            # Map current state to next state          
+            # Map current state to next states        
             for move in transitions:
                 legal_moves.append({queen:move})
         return legal_moves
