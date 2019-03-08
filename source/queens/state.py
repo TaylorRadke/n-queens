@@ -8,7 +8,7 @@ class Queen(tuple):
     def __eq__(self,other):
         return (self[0] == other[0] and self[1] == other[1])
 
-class STATE(object):
+class State(object):
     """STATE is a class used to hold states of the n-queens positions
     stored as tuple derived queen piece (row,column,moved) on n * n board"""
 
