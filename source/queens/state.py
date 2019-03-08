@@ -44,7 +44,7 @@ class State(object):
         row = randrange(0,self.n)
         column = randrange(0,self.n)
 
-        if (row,column,False) not in self.state:
+        if (row,column) not in self.state:
             self.state.append((row,column))
 
         self.create_random_initial_state()

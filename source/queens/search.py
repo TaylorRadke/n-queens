@@ -12,6 +12,7 @@ class SEARCH(object):
         self.goal_reached = False
         self.explored = set({})
         self.frontier = None
+        self.solution = None
 
     def initialise_state(self):
         return Leaf(self,State(self.n))
@@ -25,8 +26,9 @@ class SEARCH(object):
             return False
         return True
 
-    def is_goal_reached(self):
-        return self.goal_reached
+    def found_solution(self,solution_state):
+        self.solution = solution_state
+        self.goal_reached = True
 
 class Leaf(object):
     def __init__(self,tree,parent):
@@ -40,7 +42,6 @@ class Leaf(object):
     
     def get_parent(self):
         return self.parent
-
 
     def get_state(self):
         return self.state
@@ -59,28 +60,32 @@ class Leaf(object):
                     #Check if state not in frontier or explored
                     if not self.tree.state_exists(new_state):
                         #Add new node to frontier
-                        self.tree.enqueue_frontier(Leaf(self.tree,State(self.n,new_state)))
+                        c_state = State(self.n,new_state)
+
+                        #Check if state is a solution
+                        if not c_state.state_in_conflict():
+                            self.tree.found_solution(c_state)
+                        self.tree.enqueue_frontier(Leaf(self.tree,c_state))
 
 class BFS(SEARCH):
     """Breadth first search is a tree search which implements a queue to find a solution"""
 
     def __init__(self,n):
         super().__init__(n)
-
         self.frontier = Queue()
         self.enqueue_frontier(self.initial_state)
 
     def search(self):
-        if not self.frontier.empty():
+        """Performs the breadth-first to find a solution to the initial state"""
+        while not self.goal_reached and not self.frontier.empty():
             leaf = self.frontier.get()
             self.add_explored_state(leaf.get_state())
-            if not leaf.is_goal():
-                leaf.map_new_state()
-                self.search()
-            else:
-                print("found solution")
+            leaf.map_new_state()
+
+        if (self.frontier.empty()):
+            print("No solution")
         else:
-            return False
+            print(self.solution.print_state())
 
     def enqueue_frontier(self,node):
         self.frontier.put(node)
