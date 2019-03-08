@@ -2,7 +2,7 @@ import queens.state as state
 import queens.search as search
 
 def main():
-    n = 5
+    n = 4
 
     tree = search.BFS(n)
     tree.search()
