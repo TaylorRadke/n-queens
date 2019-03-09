@@ -76,9 +76,10 @@ class BFS(Search,Leaf):
         while not self.goal_reached and not self.frontier.empty():
             state = self.frontier.get()
             self.add_explored_state(state)
+            Leaf(self,State(self.n,state)).map_new_state()
+            print("Frontier: {}\tExplored: {}\tTime: {}"
+                .format(self.frontier.qsize(),len(self.explored),time()-start),end="\r")
 
-            leaf = Leaf(self,State(self.n,state))
-            leaf.map_new_state()
         print("\n")
         print("Time taken: {}\n".format(time()-start))
         if (self.frontier.empty()):
@@ -91,4 +92,6 @@ class BFS(Search,Leaf):
     def enqueue_frontier(self,node):
         self.frontier.put(node)
 
-    
+class DFS(Search):
+    def __init__(self,n,initial_state=None):
+        super().__init__(self,initial_state)

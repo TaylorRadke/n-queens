@@ -7,19 +7,16 @@ class State(object):
     def __init__(self,n,initial_state=None):
         self.n = n
         self.state = initial_state
-        self.actions = []
         if self.state == None:
             self.state = []
             self.create_random_initial_state()
 
-        self.state_space = self.enumerate_state_space()
-        self.culled_state_space = self.enumerate_state_space_and_cull()
+        self.state_space = [(i,j) for i in range(self.n) for j in range(self.n)]
+        self.culled_state_space = [(i,j) for i in range(self.n) \
+            for j in range(self.n) if (i,j) not in self.state]
 
         self.state_row_map, self.state_col_map = self.map_states(self.culled_state_space)
         self.queen_row_map, self.queen_col_map = self.map_states(self.state)
-
-    # def __eq__(self,other):
-    #     return self.state in all(other.get_state())
 
     def print_state(self):
         for i in range(self.n):
@@ -34,9 +31,6 @@ class State(object):
     def get_state(self):
         return self.state
 
-    def get_n(self):
-        return self.n
-
     def create_random_initial_state(self):
         if len(self.state) == self.n:
             return
@@ -48,13 +42,6 @@ class State(object):
             self.state.append((row,column))
 
         self.create_random_initial_state()
-
-    def enumerate_state_space(self):
-        return [(i,j) for i in range(self.n) for j in range(self.n)]
-
-    def enumerate_state_space_and_cull(self):
-        """Creates an array with tuples from (0,0) to (n,n) then removes all tuples where a queen already exists"""
-        return [(i,j) for i in range(self.n) for j in range(self.n) if (i,j) not in self.state]
 
     def map_states(self,state_to_map):
         states = state_to_map.copy()
@@ -77,7 +64,6 @@ class State(object):
         """Check if self state in conflict, returns True when any queen 
         can attack any other, otherwise returns False(goal reached)"""
 
-        # Check rows/columns in conflict
         for i in range(0,self.n-1):
             for j in range(i+1,self.n):
                 #Check Rows in conflict
