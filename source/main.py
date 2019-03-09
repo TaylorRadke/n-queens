@@ -1,8 +1,10 @@
 import queens.state as state
 import queens.search as search
+import sys
 
 def main():
-    n = 10
+    n = int(sys.argv[1])
+    print(n)
     tree = search.BFS(n)
     tree.search()
 
