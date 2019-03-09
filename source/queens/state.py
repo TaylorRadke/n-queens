@@ -18,8 +18,8 @@ class State(object):
         self.state_row_map, self.state_col_map = self.map_states(self.culled_state_space)
         self.queen_row_map, self.queen_col_map = self.map_states(self.state)
 
-    def __eq__(self,other):
-        return self.state in all(other.get_state())
+    # def __eq__(self,other):
+    #     return self.state in all(other.get_state())
 
     def print_state(self):
         for i in range(self.n):

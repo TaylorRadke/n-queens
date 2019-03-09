@@ -1,14 +1,12 @@
 from queue import Queue
 from queens.state import State
-import pickle
-import zlib
 
-class SEARCH(object):
+class Search(object):
     def __init__(self,n,initial_state=None):
         self.n = n
         self.initial_state = self.initialise_state()
 
-        self.initial_state.get_parent().print_state()
+        self.initial_state.print_state()
         print('\n')
 
         self.goal_reached = False
@@ -17,7 +15,7 @@ class SEARCH(object):
         self.solution = None
 
     def initialise_state(self):
-        return Leaf(self,State(self.n))
+        return State(self.n)
 
     def print_solution(self):
         print(self.solution.print_state())
@@ -66,37 +64,39 @@ class Leaf(object):
                     new_state.append(transition[state])
 
                     #Check if state not in frontier or explored
-                    if self.tree.state_explored(new_state):
+                    if not self.tree.state_explored(new_state):
                         c_state = State(self.n,new_state)
-
                         #Check if state is a solution
                         if not c_state.state_in_conflict():
-                            self.tree.found_solution(c_state)
-                        #Add new node to frontier queue
-                        self.tree.enqueue_frontier(Leaf(self.tree,c_state))
+                            self.tree.found_solution(new_state)
+                        #Add new state to frontier queue
+                        self.tree.enqueue_frontier(new_state)
+                        
 
-class BFS(SEARCH):
+class BFS(Search,Leaf):
     """Breadth first search is a tree search which implements a queue to find a solution"""
 
     def __init__(self,n):
         super().__init__(n)
         self.frontier = Queue()
-        self.enqueue_frontier(self.initial_state)
+        self.enqueue_frontier(self.initial_state.get_state())
 
     def search(self):
         """Performs the breadth-first to find a solution to the initial state"""
+    
         while not self.goal_reached and not self.frontier.empty():
-            print("Queue size: {}\nExplored States: {}\n,Queue Memeory: {}".format(self.frontier.qsize(),len(self.explored),self.frontier.__sizeof__()),end='\r')
-            leaf = self.frontier.get()
-            self.add_explored_state(leaf.get_state())
+            print("Queue size: {}\tExplored States: {}\t".format(self.frontier.qsize(),len(self.explored)),end='\r')
+            state = self.frontier.get()
+            self.add_explored_state(state)
+            leaf = Leaf(self,State(self.n,state))
             leaf.map_new_state()
-
+        print("\n")
         if (self.frontier.empty()):
             print("No solution")
         else:
-            print(self.solution.get_state())
-            print(self.frontier.qsize())
-        print(len(self.explored))
+            print("Solution found")
+            State(self.n,self.solution).print_state()
+
 
     def enqueue_frontier(self,node):
         self.frontier.put(node)
