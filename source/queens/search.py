@@ -32,8 +32,7 @@ class Search(object):
         self.goal_reached = True
 
 class Leaf(object):
-    __slots__ = ["tree","parent","state","n"]
-
+   
     def __init__(self,tree,parent):
         self.tree = tree
         self.parent = parent
