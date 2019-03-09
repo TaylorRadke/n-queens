@@ -2,13 +2,12 @@ import queens.search as search
 import sys
 import csv
 
-def main():
+def main(n,sample_size):
     with open("results.csv",'w') as csv_file:
         csv_writer = csv.writer(csv_file)
-        for n in range(1,6):
-            for i in range(5):
-                initial_state,search_time,solution = search.BFS(n).search()
-                csv_writer.writerow([n,search_time,initial_state,solution])
+        for n in range(n):
+            for i in range(sample_size):
+                search.BFS(n,logging=csv_writer).search()
 
 if __name__ == "__main__": 
-    main()
+    main(int(sys.argv[1]),int(sys.argv[2]))
