@@ -24,12 +24,15 @@ class State(object):
                 if (i,j) in self.state:
                     print("Q",end=" ")
                 else:
-                    print("_",end=" ")
+                    print("-",end=" ")
                 if j == self.n-1:
                     print("\n")
 
     def get_state(self):
         return self.state
+
+    def get_n(self):
+        return self.n
 
     def create_random_initial_state(self):
         if len(self.state) == self.n:
@@ -54,7 +57,7 @@ class State(object):
             map_state_space_cols[i[1]].append(i[0])
         
         return map_state_space_rows,map_state_space_cols
-
+    
     def queens_diagonal(self,a,b):
             row_diff = abs(a[0] - b[0])
             col_diff = abs(a[1] - b[1])
@@ -128,27 +131,21 @@ class State(object):
         """
         Finds all possible legal moves for each queen on the board
         """
-        states = self.culled_state_space.copy()
-        actions = []
         for queen in self.state:
-            transitions = []
-            for state in states:
+            for state in self.culled_state_space.copy():
                 #Add transition if on same row
-                if state[0] == queen[0]:
-                    if not self.row_move_blocked(queen[0],queen[1],state[1]):
-                        transitions.append((state[0],state[1]))
+                if state[0] == queen[0] and \
+                    not self.row_move_blocked(queen[0],queen[1],state[1]):
+                        yield {queen:(state[0],state[1])}
                 #Add transition if in same column
-                elif state[1] == queen[1]:
-                    if not self.col_move_blocked(queen[1],queen[0],state[0]):
-                        transitions.append((state[0],state[1]))
+                elif state[1] == queen[1] and \
+                    not self.col_move_blocked(queen[1],queen[0],state[0]):
+                        yield {queen:(state[0],state[1])}
                 #Add transition if diagonal
-                elif self.queens_diagonal(queen,state):
-                    if not self.diagonal_move_blocked(queen,state):
-                        transitions.append((state[0],state[1]))
-            # Map current state to next states        
-            for move in transitions:
-                actions.append({queen:move})
-        return actions
+                elif self.queens_diagonal(queen,state) and \
+                    not self.diagonal_move_blocked(queen,state):
+                        yield {queen:(state[0],state[1])}
+        
             
 
             
