@@ -60,7 +60,7 @@ class State(object):
         states = state_to_map.copy()
 
         map_state_space_rows = [[] for i in range(self.n)]
-        map_state_space_cols = map_state_space_rows.copy()
+        map_state_space_cols = [[] for i in range(self.n)]
 
         for i in states:
             map_state_space_rows[i[0]].append(i[1])
@@ -71,7 +71,6 @@ class State(object):
     def queens_diagonal(self,a,b):
             row_diff = abs(a[0] - b[0])
             col_diff = abs(a[1] - b[1])
-
             return row_diff == col_diff
 
     def state_in_conflict(self):
@@ -89,7 +88,7 @@ class State(object):
                     return True
                 #Check Diagonals in conflict
                 else:
-                    if bool(self.queens_diagonal(self.state[i],self.state[j])):
+                    if self.queens_diagonal(self.state[i],self.state[j]):
                         return True
         return False
 

@@ -1,10 +1,11 @@
 from queue import Queue
 from queens.state import State
+from time import time
 
 class Search(object):
     def __init__(self,n,initial_state=None):
         self.n = n
-        self.initial_state = self.initialise_state()
+        self.initial_state = State(self.n,initial_state)
 
         self.initial_state.print_state()
         print('\n')
@@ -14,17 +15,14 @@ class Search(object):
         self.frontier = None
         self.solution = None
 
-    def initialise_state(self):
-        return State(self.n)
-
     def print_solution(self):
         print(self.solution.print_state())
 
     def add_explored_state(self,state):
         self.explored.add(hash(frozenset(state)))
 
+    #Check if hash of state in explored
     def state_explored(self,state):
-        #Check if hash of state in explored
         if hash(frozenset(state)) not in self.explored:
             return False
         return True
@@ -42,15 +40,6 @@ class Leaf(object):
         self.state = self.parent.get_state()
         self.n = self.parent.get_n()
 
-    def is_goal(self):
-        return not self.parent.state_in_conflict()
-    
-    def get_parent(self):
-        return self.parent
-
-    def get_state(self):
-        return self.state
-
     def map_new_state(self):
         enumerated_states = self.parent.enumerate_actions()
         for state in self.state:
@@ -63,34 +52,36 @@ class Leaf(object):
                     #Push new position
                     new_state.append(transition[state])
 
+                    #Check if state is a solution
+                    if not State(self.n,new_state).state_in_conflict():
+                        self.tree.found_solution(new_state)
                     #Check if state not in frontier or explored
                     if not self.tree.state_explored(new_state):
-                        c_state = State(self.n,new_state)
-                        #Check if state is a solution
-                        if not c_state.state_in_conflict():
-                            self.tree.found_solution(new_state)
                         #Add new state to frontier queue
                         self.tree.enqueue_frontier(new_state)
+                        #Add state to explored
+                        self.tree.add_explored_state(new_state)
                         
 
 class BFS(Search,Leaf):
     """Breadth first search is a tree search which implements a queue to find a solution"""
 
-    def __init__(self,n):
-        super().__init__(n)
+    def __init__(self,n,initial_state=None):
+        super().__init__(n,initial_state)
         self.frontier = Queue()
         self.enqueue_frontier(self.initial_state.get_state())
 
     def search(self):
         """Performs the breadth-first to find a solution to the initial state"""
-    
+        start = time()
         while not self.goal_reached and not self.frontier.empty():
-            print("Queue size: {}\tExplored States: {}\t".format(self.frontier.qsize(),len(self.explored)),end='\r')
             state = self.frontier.get()
             self.add_explored_state(state)
+
             leaf = Leaf(self,State(self.n,state))
             leaf.map_new_state()
         print("\n")
+        print("Time taken: {}\n".format(time()-start))
         if (self.frontier.empty()):
             print("No solution")
         else:
