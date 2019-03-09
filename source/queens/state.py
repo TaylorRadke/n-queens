@@ -134,17 +134,24 @@ class State(object):
         for queen in self.state:
             for state in self.culled_state_space.copy():
                 #Add transition if on same row
+                new_state = False
                 if state[0] == queen[0] and \
                     not self.row_move_blocked(queen[0],queen[1],state[1]):
-                        yield {queen:(state[0],state[1])}
+                        new_state = True
                 #Add transition if in same column
                 elif state[1] == queen[1] and \
                     not self.col_move_blocked(queen[1],queen[0],state[0]):
-                        yield {queen:(state[0],state[1])}
+                        new_state = True
                 #Add transition if diagonal
                 elif self.queens_diagonal(queen,state) and \
                     not self.diagonal_move_blocked(queen,state):
-                        yield {queen:(state[0],state[1])}
+                        new_state = True
+                #Replace state with new state
+                if new_state:
+                    new_state = self.state.copy()
+                    new_state.pop(new_state.index(queen))
+                    new_state.append((state[0],state[1]))
+                    yield new_state
         
             
 

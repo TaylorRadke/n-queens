@@ -31,23 +31,14 @@ class Search(object):
         self.solution = solution_state
         self.goal_reached = True
 
-    def map_new_state(self,parent):
-        for state in parent:
-            for transition in State(self.n,parent).enumerate_actions():
-                #If queen has a legal move
-                if state in transition:
-                    new_state = parent.copy()
-                    #Pop current position
-                    new_state.pop(new_state.index(state))
-                    #Push new position
-                    new_state.append(transition[state])
-                    #Check if state is a solution
-                    if not State(self.n,new_state).state_in_conflict():
-                        self.found_solution(new_state)
-                    #Check if state not in frontier or explored
-                    if not self.state_explored(new_state):
-                        #Add new state to frontier queue
-                        yield new_state
+    def map_new_state(self,parent,ds_push):
+        for action in list(State(self.n,parent).enumerate_actions()):
+            if not State(self.n,action).state_in_conflict():
+                self.found_solution(action)
+                #Check if state not in frontier or explored
+            if not self.state_explored(action):
+            #Add new state to data structure (queue,stack...etc)
+                ds_push(action)
 
         
                         
@@ -69,12 +60,14 @@ class BFS(Search):
         while not self.goal_reached and not self.frontier.empty():
             state = self.frontier.get()
             self.add_explored_state(state)
-            for action in list(self.map_new_state(state)):
-                self.frontier.put(action)
+
+            self.map_new_state(state,self.frontier.put)
             print("States Explored: {}".format(len(self.explored)),end='\r',flush=True)
+
+
         print()
         print("Time taken: {} seconds".format(time()-start))
-        print("Time Finished: ", datetime.datetime.now())
+        print("Search Finished: ", datetime.datetime.now())
         if (self.frontier.empty()):
             print("No solution")
         else:
