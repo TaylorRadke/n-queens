@@ -1,8 +1,6 @@
 from queue import Queue
 from queens.state import State
 from time import time
-import datetime
-import sys
 
 class Search(object):
     def __init__(self,n,initial_state=None,logger=None):
@@ -20,9 +18,7 @@ class Search(object):
 
     #Check if hash of state in explored
     def state_explored(self,state):
-        if hash(frozenset(state)) not in self.explored:
-            return False
-        return True
+        return hash(frozenset(state)) in self.explored
 
     def map_new_state(self,parent,ds_push):
         for action in list(State(self.n,parent).enumerate_actions()):
