@@ -10,6 +10,7 @@ class State(object):
 
         if self.state == None:  self.create_random_initial_state()
 
+        #All transitions on board except any that are occupied by other queens
         self.state_space = [(i,j) for i in range(self.n) \
             for j in range(self.n) if (i,j) not in self.state]
 
@@ -22,7 +23,6 @@ class State(object):
                     print("-",end=" ")
                 if j == self.n-1:
                     print("\n")
-        print()
 
     def get_state(self):
         return self.state
@@ -31,9 +31,9 @@ class State(object):
         self.state = []
 
         while len(self.state) != self.n:
-            row = randrange(0,self.n)
-            column = randrange(0,self.n)
-            if (row,column) not in self.state:  self.state.append((row,column))
+            rand_row = randrange(0,self.n)
+            rand_col = randrange(0,self.n)
+            if (rand_row,rand_col) not in self.state:  self.state.append((rand_row,rand_col))
     
 
     def transition_in_conflict(self,a,b):
@@ -44,7 +44,7 @@ class State(object):
     def state_in_conflict(self):
         """Check if self state in conflict, returns True when any queen 
         can attack any other, otherwise returns False(goal reached)"""
-        for i in range(0,self.n-1):
+        for i in range(self.n-1):
             for j in range(i+1,self.n):
                 if self.transition_in_conflict(self.state[i],self.state[j]):
                     return True   
@@ -56,7 +56,7 @@ class State(object):
         """
         for queen in self.state:
             for state in self.state_space:
-                #Replace state with new state
+                #Replace Queen's current position with it's new position
                 new_state = self.state.copy()
                 new_state.pop(new_state.index(queen))
                 new_state.append(state)

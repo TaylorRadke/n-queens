@@ -20,9 +20,7 @@ class Search(object):
         return hash(frozenset(state)) in self.explored
     
     #Get number of combinations possible for an n * n board
-    # nCr(n) = (n^2)!
-    #       ------------
-    #       n!(n^2 - n)!
+    # nCr(n) = (n^2)! / n!(n^2 - n)!
     def n_combinations(self):
         n = self.n*self.n
         r = self.n
@@ -32,20 +30,22 @@ class Search(object):
         self.solutions += 1
         print('\n\n')
         State(self.n,solution).print_state()
-        print("-"*80,'\n') 
+        print("-"*100,'\n') 
 
     def get_actions(self,parent,ds_push):
+        self.add_explored_state(parent)
+
+        #Check if parent is a goal state
+        if not State(self.n,parent).state_in_conflict():    self.solution_found(parent)
+
         for action in list(State(self.n,parent).enumerate_actions()):
             #Check if state has already been explored
             if not self.state_explored(action):
                 #Add state to explored
                 self.add_explored_state(action)
-                #Check if state is a goal state
-                if not State(self.n,action).state_in_conflict():
-                    self.solution_found(action)
+                
                 #Add state to frontier
-                else:
-                    ds_push(action)
+                ds_push(action)
 
 class BFS(Search):
     """Breadth first search is a tree search which implements a queue to find a solution"""
@@ -63,14 +63,11 @@ class BFS(Search):
         combinations = int(self.n_combinations())
 
         while not self.frontier.empty():
-            print("n = {},   Solutions found: {},   States Checked: {}/{},  States Queued: {}"
+            print("n = {},   Solutions found: {}, States Checked: {}/{}, States Queued: {}"
             .format(self.n,self.solutions,len(self.explored),combinations,self.frontier._qsize()),end='\r')
-                
-            state = self.frontier.get()
-            if not State(self.n,state).state_in_conflict():
-                self.solution_found(state)
-            self.add_explored_state(state)
-            self.get_actions(state,self.frontier.put)
-        print()
+
+            self.get_actions(self.frontier.get(),self.frontier.put)
+
         search_time = time() - start
-        print("Search Time: ", search_time, "\tStates explored: ",len(self.explored),"\tSolutions Found: ",self.solutions)
+        print("Search Time: {} seconds, States explored: {}, Solutions Found: {}"
+            .format(search_time,len(self.explored),self.solutions))
