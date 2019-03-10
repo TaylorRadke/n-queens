@@ -34,7 +34,7 @@ class Search(object):
         for action in list(State(self.n,parent).enumerate_actions()):
             if not State(self.n,action).state_in_conflict():
                 self.found_solution(action)
-                #Check if state not in frontier or explored
+            #Check if state not explored
             elif not self.state_explored(action):
             #Add new state to data structure (queue,stack...etc)
                 ds_push(action)
@@ -49,7 +49,7 @@ class BFS(Search):
         super().__init__(n,initial_state,logging)
         self.frontier = Queue()
         self.frontier.put(self.initial_state.get_state())
-        
+
     def search(self):
         """Performs the breadth-first to find a solution to the initial state"""
         print("n = ", self.n)
