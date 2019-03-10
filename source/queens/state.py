@@ -31,9 +31,6 @@ class State(object):
     def get_state(self):
         return self.state
 
-    def get_n(self):
-        return self.n
-
     def create_random_initial_state(self):
         if len(self.state) == self.n:
             return
