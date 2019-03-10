@@ -7,8 +7,6 @@ class Search(object):
         self.n = n
         self.logger = logger
         self.initial_state = State(self.n,initial_state)
-
-        self.goal_reached = False
         self.explored = set({})
         self.frontier = None
         self.solutions = 0
@@ -19,20 +17,20 @@ class Search(object):
     #Check if hash of state in explored
     def state_explored(self,state):
         return hash(frozenset(state)) in self.explored
-
-    def map_new_state(self,parent,ds_push):
+    
+    def get_actions(self,parent,ds_push):
         for action in list(State(self.n,parent).enumerate_actions()):
             #Check if action is a goal state
             if not self.state_explored(action):
                 if not State(self.n,action).state_in_conflict():
-                    self.solutions +=1
+                    self.solutions += 1
                     self.add_explored_state(action)
                     print()
                     State(self.n,action).print_state()
-                    print("="*50)
+                    print("-"*50,'\n') 
                 else:
-                    #Add new unexplored and non-goal state to data structure (queue,stack...etc)
-                    ds_push(action)
+                    if not self.state_explored(action):
+                        ds_push(action)
 
 class BFS(Search):
     """Breadth first search is a tree search which implements a queue to find a solution"""
@@ -41,17 +39,21 @@ class BFS(Search):
         super().__init__(n,initial_state,logger)
         self.frontier = Queue()
         self.frontier.put(self.initial_state.get_state())
-    
+
     def search(self):
         """Performs the breadth-first to find a solution to the initial state"""
         start = time()
+
         while not self.frontier.empty():
-            print("n = {},   Solutions found: {},    States Checked: {}".format(self.n,self.solutions,len(self.explored)),end='\r')
+            print("n = {},   Solutions found: {},    States Checked: {}, Frontier: {}".format(self.n,self.solutions,len(self.explored),self.frontier._qsize()),end='\r')
             state = self.frontier.get()
             self.add_explored_state(state)
-            self.map_new_state(state,self.frontier.put)
+            self.get_actions(state,self.frontier.put)
 
+
+        search_time = time() - start
+        print("Search Time: ", search_time, "\tStates explored: ",len(self.explored),"\tSolutions Found: ",self.solutions)
         if self.logger:
-            self.logger.writerow([self.n,time()-start,len(self.explored),\
+            self.logger.writerow([self.n,search_time,len(self.explored),\
                 self.solutions,self.initial_state.get_state()])
         del self
