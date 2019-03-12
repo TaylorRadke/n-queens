@@ -33,12 +33,7 @@ class Search(object):
         print("-"*100,'\n') 
 
     def get_actions(self,parent,ds_push):
-        self.add_explored_state(parent)
-
-        #Check if parent is a goal state
-        if not State(self.n,parent).state_in_conflict():    self.solution_found(parent)
-
-        for action in list(State(self.n,parent).enumerate_actions()):
+       for action in list(State(self.n,parent).enumerate_actions()):
             #Check if state has already been explored
             if not self.state_explored(action):
                 #Add state to explored
@@ -65,8 +60,11 @@ class BFS(Search):
         while not self.frontier.empty():
             print("n = {},   Solutions found: {}, States Checked: {}/{}, States Queued: {}"
             .format(self.n,self.solutions,len(self.explored),combinations,self.frontier._qsize()),end='\r')
-
-            self.get_actions(self.frontier.get(),self.frontier.put)
+            state = self.frontier.get()
+            if not State(self.n,state).state_in_conflict():
+                self.solution_found(state)
+            self.add_explored_state(state)
+            self.get_actions(state,self.frontier.put)
 
         search_time = time() - start
         print("Search Time: {} seconds, States explored: {}, Solutions Found: {}"
