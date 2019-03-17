@@ -24,7 +24,7 @@ class Search(object):
     def n_combinations(self):
         n = self.n*self.n
         r = self.n
-        return factorial(n) / factorial(r) / factorial(n-r)
+        return factorial(n) // factorial(r) // factorial(n-r)
 
     def solution_found(self,solution):
         self.solutions += 1
@@ -55,7 +55,7 @@ class BFS(Search):
     def search(self):
         """Performs the breadth-first to find a solution to the initial state"""
         start = time()
-        combinations = int(self.n_combinations())
+        combinations = self.n_combinations()
 
         while not self.frontier.empty():
             print("n = {},   Solutions found: {}, States Checked: {}/{}, States Queued: {}"
