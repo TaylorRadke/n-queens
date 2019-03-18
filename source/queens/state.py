@@ -49,15 +49,12 @@ class State(object):
         """
         Finds all possible legal moves for each queen on the board
         """
-        pass
-        # for queen in self.state:
-        #     for state in self.state_space:
-        #         #Replace Queen's current position with it's new position
-        #         new_state = self.state.copy()
-        #         new_state.pop(new_state.index(queen))
-        #         new_state.append(state)
-        #         yield new_state
-                    
-                
+        for queen in self.state:
+            for i in range(self.n):
+                if i != queen[0]:
+                    state = self.state.copy()
+                    state.pop(state.index(queen))
+                    state.append((i,queen[1]))
+                    yield state
 
 
