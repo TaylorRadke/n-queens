@@ -1,12 +1,10 @@
 import queens.search as search
 import sys
-import queens.state
-
+from queens.state import State
 
 def main():
     n = int(sys.argv[1])
-    search.BFS(n).search()
-
+    State(n).print_state()
 
 if __name__ == "__main__":
     main() 
