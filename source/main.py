@@ -4,123 +4,93 @@ from math import e
 from time import time
 from queue import Queue
 
-class State(object):
-    """STATE is a class used to hold states of the n-queens positions
-    stored as tuple derived queen piece (row,column,moved) on n * n board"""
+def print_state(state):
+    n = len(state)
+    for i in range(n):
+        for j in range(n):
+            if state[j] == i: print("Q", end=" ")
+            else: print("-",end=" ")
+            if j == n-1:
+                print('\n')
+    print('\n')
 
-    def __init__(self,n,initial_state=None):
-        self.n = n
-        self.state = initial_state
+def create_random_state(n):
+    #Create list of queens where the index is the column and the value is the row
+    return [randrange(0,n) for _ in range(n)]
 
-        self.state = initial_state
+def state_in_conflict(state):
+    """Check if self state in conflict, returns True when any queen 
+    can attack any other, otherwise returns False(goal reached)"""
+    attacking = 0
+    n = len(state)
+    for i in range(n-1):
+        for j in range(i+1,n):
+            #if value is the same indicates queen on the same row
+            if state[i] == state[j]:
+                attacking += 1
+            else:
+                row_diff = j - i
+                col_diff = state[j] - state[i]
+                if abs(row_diff) == abs(col_diff):
+                    attacking+=1   
+    return attacking
 
-    def print_state(self):
-        for i in range(self.n):
-            for j in range(self.n):
-                if (i,j) in self.state:
-                    print("Q",end=" ")
-                else:
-                    print("-",end=" ")
-                if j == self.n-1:
-                    print("\n")
+def enumerate_actions(parent): 
+    """
+    Finds all possible legal moves for each queen on the board
+    """
+    n = len(parent)
+    for i in range(n):
+        for j in range(n):
+            if parent[i] != j:
+                state = parent.copy()
+                state[i] = j
+                yield state
 
-    def create_random_initial_state(self):
-        state = []
-        for col in range(self.n):
-            row = randrange(0,self.n)
-            state.append((row,col))
-        return state
+def BFS(n):
+    initial_state = create_random_state(n)
+    print_state(initial_state)
+    explored = set({})
+    frontier = Queue()
+    solutions = 0
+    frontier.put(initial_state)
 
-    def transition_in_conflict(self,curr_state,new_state):
-        row_diff = curr_state[0] - new_state[0]
-        col_diff = curr_state[1] - new_state[1]
-        return row_diff == 0 or col_diff == 0 or abs(row_diff) == abs(col_diff)
+    start = time()
+    while not frontier.empty():
+        print("n: {}, Solutions: {}, Queue: {}, States Checked: {}"
+        .format(n,solutions,frontier._qsize(),len(explored)),end='\r')
+        state = frontier.get()
 
-    def in_conflict(self):
-        """Check if self state in conflict, returns True when any queen 
-        can attack any other, otherwise returns False(goal reached)"""
-        states_in_conflict = 0
-        for i in range(self.n-1):
-            for j in range(i+1,self.n):
-                if self.transition_in_conflict(self.state[i],self.state[j]):
-                    states_in_conflict += 1   
-        return states_in_conflict
+        if hash(str(state)) not in explored:
+            explored.add(hash(str(state)))
+            if not state_in_conflict(state):
+                solutions+=1
+                print('\n')
+                print_state(state)
+                print('*'*90)
 
-    def enumerate_actions(self): 
-        """
-        Finds all possible legal moves for each queen on the board
-        """
-        for queen in self.state:
-            for i in range(self.n):
-                if i != queen[0]:
-                    state = self.state.copy()
-                    state.pop(state.index(queen))
-                    state.append((i,queen[1]))
-                    yield state
-
-class BFS(object):
-    def __init__(self,n,initial_state=None):
-        self.n = n
-        self.initial_state = State(self.n).create_random_initial_state()
-        self.explored = set({})
-        self.frontier = Queue()
-        self.solutions = 0
-        self.frontier.put(self.initial_state)
-
-    #Add hash of state to explored
-    def add_explored_state(self,action):
-        self.explored.add(hash(frozenset(action)))
-
-    #Check if hash of state in explored
-    def state_explored(self,state):
-        return hash(frozenset(state)) in self.explored
-    
-    def solution_found(self,solution):
-        self.solutions += 1
-        print('\n\n')
-        State(self.n,solution).print_state()
-        print("-"*90,'\n') 
-
-    def get_actions(self,parent,ds_push):
-       for action in list(State(self.n,parent).enumerate_actions()):
+        for action in list(enumerate_actions(state)):
             #Check if state has already been explored
-            if not self.state_explored(action):
+            if hash(str(action)) not in explored:
                 #Add state to explored
-                self.add_explored_state(action)
-                
+                explored.add(hash(str(state)))
                 #Add state to frontier
-                ds_push(action)
-    
-    def search(self):
-        """Performs the breadth-first to find a solution to the initial state"""
-        start = time()
-
-        while not self.frontier.empty():
-            print("n = {}, Solutions found: {}, States Checked: {}/{}, States Queued: {}"
-            .format(self.n,self.solutions,len(self.explored),pow(self.n,self.n),self.frontier._qsize()),end='\r')
-            state = self.frontier.get()
-
-            if not State(self.n,state).in_conflict():
-                self.solution_found(state)
-            self.add_explored_state(state)
-
-            self.get_actions(state,self.frontier.put)
-
-        search_time = time() - start
-        print("Search Time: {} seconds, States explored: {}, Solutions Found: {}"
-            .format(search_time,len(self.explored),self.solutions))
+                frontier.put(action)
+    print()
+    print("Search time: {}".format(time()-start))
         
+
 class HillClimb(object):
     def __init__(self,n):
         self.n = n
-        self.state = State(n).create_random_initial_state()
-        self.cost = State(n,self.state).in_conflict()
+        self.state = create_random_state(self.n)
+        self.cost = state_in_conflict(self.state)
         self.solution_found = False
         self.restarts = 0
 
     def restart(self):
-        self.state = State(self.n).create_random_initial_state()
-        self.cost = State(self.n,self.state).in_conflict()
+        self.state = create_random_state(self.n)
+        self.cost = state_in_conflict(self.state)
         self.restarts+=1
 
     def search(self):
@@ -129,9 +99,9 @@ class HillClimb(object):
         while not self.solution_found:
             print("Restarts: {}".format(self.restarts),end='\r')
             old_cost = self.cost
-            if bool(State(self.n,self.state).in_conflict()):
-                for action in list(State(self.n,self.state).enumerate_actions()):
-                    cost = State(self.n,action).in_conflict()
+            if bool(state_in_conflict(self.state)):
+                for action in list(enumerate_actions(self.state)):
+                    cost = state_in_conflict(action)
                     if cost < self.cost:
                         self.cost = cost
                         self.state = action
@@ -139,13 +109,13 @@ class HillClimb(object):
                     self.restart()
             else:
                 self.solution_found = True
-                State(self.n,self.state).print_state()
+                print_state(self.state)
         print("Time taken: {}".format(time()-start))
 
 class SimulatedAnnealing(object):
     def __init__(self,n):
         self.n = n
-        self.state = State(self.n).create_random_initial_state()
+        self.state = create_random_state(self.n)
         self.k = 1000
         self.temp = self.k
         self.cost = None
@@ -153,8 +123,9 @@ class SimulatedAnnealing(object):
 
     
     def random_select_neighbour(self):
-        states = [action for action in list(State(self.n,self.state).enumerate_actions())]
-        return states[randrange(0,len(states))]
+        random_queen = self.state[randrange(0,self.n)]
+        return random_queen
+
 
     def temp_func(self,n):
         return pow(0.99,n)
@@ -164,10 +135,10 @@ class SimulatedAnnealing(object):
         while not self.solution_found:
             print("Temp: {}".format(self.temp),end='\r')
             for _ in range(self.k):
-                self.cost = State(self.n,self.state).in_conflict()
+                self.cost = state_in_conflict(self.state)
                 if bool(self.cost):
                     random_neighbour = self.random_select_neighbour()
-                    random_neighbour_cost = State(self.n,random_neighbour).in_conflict()
+                    random_neighbour_cost = state_in_conflict(random_neighbour)
 
                     if random_neighbour_cost <= self.cost:
                         self.state = random_neighbour
@@ -179,13 +150,16 @@ class SimulatedAnnealing(object):
                             self.cost = random_neighbour_cost
                 else:
                     self.solution_found = True
-                    State(self.n,self.state).print_state()
+                    print_state(self.state)
                     break
             self.temp -= self.temp_func(n)
             n+=1
+
+
 def main():
     n = int(sys.argv[1])
-    SimulatedAnnealing(n).search()
-        
+    BFS(n)
+
+
 if __name__ == "__main__":
     main() 
