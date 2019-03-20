@@ -29,9 +29,7 @@ def state_in_conflict(state):
             if state[i] == state[j]:
                 attacking += 1
             else:
-                row_diff = j - i
-                col_diff = state[j] - state[i]
-                if abs(row_diff) == abs(col_diff):
+                if abs(j - i) == abs(state[j] - state[i]):
                     attacking+=1   
     return attacking
 
@@ -43,22 +41,23 @@ def enumerate_actions(parent):
     for i in range(n):
         for j in range(n):
             if parent[i] != j:
-                state = parent.copy()
+                state = parent[:]
                 state[i] = j
                 yield state
 
 def BFS(n):
     initial_state = create_random_state(n)
-    print_state(initial_state)
     explored = set({})
     frontier = Queue()
     solutions = 0
     frontier.put(initial_state)
 
     start = time()
+
     while not frontier.empty():
         print("n: {}, Solutions: {}, Queue: {}, States Checked: {}"
         .format(n,solutions,frontier._qsize(),len(explored)),end='\r')
+
         state = frontier.get()
 
         if hash(str(state)) not in explored:
@@ -72,45 +71,37 @@ def BFS(n):
         for action in list(enumerate_actions(state)):
             #Check if state has already been explored
             if hash(str(action)) not in explored:
-                #Add state to explored
-                explored.add(hash(str(state)))
                 #Add state to frontier
                 frontier.put(action)
     print()
     print("Search time: {}".format(time()-start))
-        
 
-class HillClimb(object):
-    def __init__(self,n):
-        self.n = n
-        self.state = create_random_state(self.n)
-        self.cost = state_in_conflict(self.state)
-        self.solution_found = False
-        self.restarts = 0
+def HillClimbing(n):
+    state = create_random_state(n)
+    cost = state_in_conflict(state)
+    solution_found = False
+    restarts = 0
 
-    def restart(self):
-        self.state = create_random_state(self.n)
-        self.cost = state_in_conflict(self.state)
-        self.restarts+=1
+    start = time()
+    while not solution_found:
+        print("Restarts: {}".format(restarts),end='\r')
+        old_cost = cost
+        if state_in_conflict(state):
+            for action in list(enumerate_actions(state)):
+                new_cost = state_in_conflict(action)
+                if new_cost < cost:
+                    cost = new_cost
+                    state = action
+            if old_cost == cost:
+                state = create_random_state(n)
+                cost = state_in_conflict(state)
+                restarts+=1
+        else:
+            solution_found = True
+    #Print Solution
+    print_state(state)
+    print("Search Time: {}".format(time()-start))
 
-    def search(self):
-        start = time()
-
-        while not self.solution_found:
-            print("Restarts: {}".format(self.restarts),end='\r')
-            old_cost = self.cost
-            if bool(state_in_conflict(self.state)):
-                for action in list(enumerate_actions(self.state)):
-                    cost = state_in_conflict(action)
-                    if cost < self.cost:
-                        self.cost = cost
-                        self.state = action
-                if old_cost == self.cost:
-                    self.restart()
-            else:
-                self.solution_found = True
-                print_state(self.state)
-        print("Time taken: {}".format(time()-start))
 
 class SimulatedAnnealing(object):
     def __init__(self,n):
@@ -158,7 +149,7 @@ class SimulatedAnnealing(object):
 
 def main():
     n = int(sys.argv[1])
-    BFS(n)
+    HillClimbing(n)
 
 
 if __name__ == "__main__":
