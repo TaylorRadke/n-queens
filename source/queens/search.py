@@ -6,7 +6,7 @@ from math import factorial
 class BFS(object):
     def __init__(self,n,initial_state=None):
         self.n = n
-        self.initial_state = State(self.n,initial_state).get_state()
+        self.initial_state = State(self.n).create_random_initial_state()
         self.explored = set({})
         self.frontier = Queue()
         self.solutions = 0
@@ -20,12 +20,6 @@ class BFS(object):
     def state_explored(self,state):
         return hash(frozenset(state)) in self.explored
     
-    #Get number of combinations possible for an n * n board, nCr(n) = (n^2)! / n!(n^2 - n)!
-    def n_combinations(self):
-        n = self.n*self.n
-        r = self.n
-        return factorial(n) // factorial(r) // factorial(n-r)
-
     def solution_found(self,solution):
         self.solutions += 1
         print('\n\n')
@@ -45,19 +39,44 @@ class BFS(object):
     def search(self):
         """Performs the breadth-first to find a solution to the initial state"""
         start = time()
-        combinations = self.n_combinations()
 
         while not self.frontier.empty():
-            print("n = {},   Solutions found: {}, States Checked: {}/{}, States Queued: {}"
-            .format(self.n,self.solutions,len(self.explored),combinations,self.frontier._qsize()),end='\r')
+            print("n = {}, Solutions found: {}, States Checked: {}/{}, States Queued: {}"
+            .format(self.n,self.solutions,len(self.explored),pow(self.n,self.n),self.frontier._qsize()),end='\r')
             state = self.frontier.get()
-            if not State(self.n,state).state_in_conflict():
+
+            if not State(self.n,state).in_conflict():
                 self.solution_found(state)
             self.add_explored_state(state)
+
             self.get_actions(state,self.frontier.put)
 
         search_time = time() - start
         print("Search Time: {} seconds, States explored: {}, Solutions Found: {}"
             .format(search_time,len(self.explored),self.solutions))
         
+class HillClimb(object):
+    def __init__(self,n):
+        self.n = n
+        self.state = State(n).create_random_initial_state()
+        State(n,self.state).print_state()
+        print('\n')
+        self.cost = State(n,self.state).in_conflict()
+        print(self.cost)
+        self.solution_found = False
 
+    def search(self):
+        #start = time()
+        if State(self.n,self.state).in_conflict() != 0:
+            print("not in conflict", State(self.n,self.state).in_conflict())
+        # while not self.solution_found:
+            # if not State(self.n,self.state).in_conflict():
+            #     for action in list(State(self.n,self.state).enumerate_actions()):
+            #         cost = State(self.n,action).in_conflict()
+            #         if cost < self.cost:
+            #             self.cost = cost
+            #             self.state = action
+            # else:
+            #     self.solution_found = True
+            #     State(self.n,self.state).print_state()
+       # print("Time taken: {}".format(time()-start))

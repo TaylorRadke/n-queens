@@ -1,10 +1,10 @@
-from queens.search import BFS
+import queens.search as search
 import sys
 from queens.state import State
 
 def main():
     n = int(sys.argv[1])
-    BFS(n).search()
-
+    search.HillClimb(n).search()
+        
 if __name__ == "__main__":
     main() 

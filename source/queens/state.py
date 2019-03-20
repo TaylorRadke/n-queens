@@ -8,7 +8,7 @@ class State(object):
         self.n = n
         self.state = initial_state
 
-        if self.state == None:  self.state = self.create_random_initial_state()
+        self.state = initial_state
 
     def print_state(self):
         for i in range(self.n):
@@ -36,14 +36,15 @@ class State(object):
         col_diff = curr_state[1] - new_state[1]
         return row_diff == 0 or col_diff == 0 or abs(row_diff) == abs(col_diff)
 
-    def state_in_conflict(self):
+    def in_conflict(self):
         """Check if self state in conflict, returns True when any queen 
         can attack any other, otherwise returns False(goal reached)"""
+        states_in_conflict = 0
         for i in range(self.n-1):
             for j in range(i+1,self.n):
                 if self.transition_in_conflict(self.state[i],self.state[j]):
-                    return True   
-        return False
+                    states_in_conflict += 1   
+        return states_in_conflict
 
     def enumerate_actions(self): 
         """
