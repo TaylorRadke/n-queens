@@ -59,24 +59,30 @@ class HillClimb(object):
     def __init__(self,n):
         self.n = n
         self.state = State(n).create_random_initial_state()
-        State(n,self.state).print_state()
-        print('\n')
         self.cost = State(n,self.state).in_conflict()
-        print(self.cost)
         self.solution_found = False
+        self.restarts = 0
+
+    def restart(self):
+        self.state = State(self.n).create_random_initial_state()
+        self.cost = State(self.n,self.state).in_conflict()
+        self.restarts+=1
 
     def search(self):
-        #start = time()
-        if State(self.n,self.state).in_conflict() != 0:
-            print("not in conflict", State(self.n,self.state).in_conflict())
-        # while not self.solution_found:
-            # if not State(self.n,self.state).in_conflict():
-            #     for action in list(State(self.n,self.state).enumerate_actions()):
-            #         cost = State(self.n,action).in_conflict()
-            #         if cost < self.cost:
-            #             self.cost = cost
-            #             self.state = action
-            # else:
-            #     self.solution_found = True
-            #     State(self.n,self.state).print_state()
-       # print("Time taken: {}".format(time()-start))
+        start = time()
+
+        while not self.solution_found:
+            print("Restarts: {}".format(self.restarts),end='\r')
+            old_cost = self.cost
+            if bool(State(self.n,self.state).in_conflict()):
+                for action in list(State(self.n,self.state).enumerate_actions()):
+                    cost = State(self.n,action).in_conflict()
+                    if cost < self.cost:
+                        self.cost = cost
+                        self.state = action
+                if old_cost == self.cost:
+                    self.restart()
+            else:
+                self.solution_found = True
+                State(self.n,self.state).print_state()
+        print("Time taken: {}".format(time()-start))
