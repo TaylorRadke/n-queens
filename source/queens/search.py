@@ -1,7 +1,8 @@
 from queue import Queue
 from queens.state import State
 from time import time
-from math import factorial
+from random import randrange,random
+from math import e
 
 class BFS(object):
     def __init__(self,n,initial_state=None):
@@ -86,3 +87,46 @@ class HillClimb(object):
                 self.solution_found = True
                 State(self.n,self.state).print_state()
         print("Time taken: {}".format(time()-start))
+
+class SimulatedAnnealing(object):
+    def __init__(self,n):
+        self.n = n
+        self.state = State(self.n).create_random_initial_state()
+        self.k = 10000
+        self.temp = self.k
+        self.cost = None
+        self.solution_found = False
+
+    
+    def random_select_neighbour(self):
+        states = [action for action in list(State(self.n,self.state).enumerate_actions())]
+        return states[randrange(0,len(states))]
+
+    def temp_func(self,n):
+        return pow(0.99,n)
+
+    def search(self):
+        n = 0
+        while not self.solution_found:
+            print("Temp: {}".format(self.temp),end='\r')
+            for _ in range(self.k):
+                self.cost = State(self.n,self.state).in_conflict()
+                if bool(self.cost):
+                    random_neighbour = self.random_select_neighbour()
+                    random_neighbour_cost = State(self.n,random_neighbour).in_conflict()
+
+                    if random_neighbour_cost <= self.cost:
+                        self.state = random_neighbour
+                        self.cost = random_neighbour_cost
+                    else:
+                        p = pow(e,-(self.cost - random_neighbour_cost)/self.temp) 
+                        if p > random():
+                            self.state = random_neighbour
+                            self.cost = random_neighbour_cost
+                else:
+                    self.solution_found = True
+                    State(self.n,self.state).print_state()
+                    break
+            self.temp -= self.temp_func(n)
+            n+=1
+
