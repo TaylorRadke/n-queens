@@ -49,28 +49,30 @@ def BFS(n):
     initial_state = create_random_state(n)
     explored = set({})
     frontier = Queue()
-    solutions = 0
+    solutions = []
     frontier.put(initial_state)
 
     start = time()
 
     while not frontier.empty():
         print("n: {}, Solutions: {}, Queue: {}, States Checked: {}"
-        .format(n,solutions,frontier._qsize(),len(explored)),end='\r')
+        .format(n,len(solutions),frontier._qsize(),len(explored)),end='\r')
 
         state = frontier.get()
 
-        if hash(str(state)) not in explored:
-            explored.add(hash(str(state)))
-            if not state_in_conflict(state):
-                solutions+=1
+        if not state_in_conflict(state):
+            if not state in solutions:
+                solutions.append(state)
                 print('\n')
                 print_state(state)
                 print('*'*90)
 
         for action in list(enumerate_actions(state)):
             #Check if state has already been explored
-            if hash(str(action)) not in explored:
+            hashed_action = hash(str(action))
+            if hashed_action not in explored:
+                #Add state to explored
+                explored.add(hashed_action)
                 #Add state to frontier
                 frontier.put(action)
     print()
@@ -149,7 +151,7 @@ class SimulatedAnnealing(object):
 
 def main():
     n = int(sys.argv[1])
-    HillClimbing(n)
+    BFS(n)
 
 
 if __name__ == "__main__":
