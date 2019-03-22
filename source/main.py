@@ -18,9 +18,10 @@ def create_random_state(n):
     #Create list of queens where the index is the column and the value is the row
     return [randrange(0,n) for _ in range(n)]
 
-def state_in_conflict(state,n):
+def state_in_conflict(state):
     """Check if self state in conflict, returns True when any queen 
     can attack any other, otherwise returns False(goal reached)"""
+    n = len(state)
     conflict_count = 0
     for i in range(n-1):
         for j in range(i+1,n):
@@ -55,7 +56,7 @@ def BFS(n):
 
         state = frontier.get()
 
-        if not state_in_conflict(state,n):
+        if not state_in_conflict(state):
             if not state in solutions:
                 solutions.append(state)
                 print('\n')
@@ -76,7 +77,7 @@ def BFS(n):
 
 def HillClimbing(n):
     state = create_random_state(n)
-    cost = state_in_conflict(state,n)
+    cost = state_in_conflict(state)
     solution_found = False
     restarts = 0
 
@@ -84,15 +85,15 @@ def HillClimbing(n):
     while not solution_found:
         print("Restarts: {}".format(restarts),end='\r')
         old_cost = cost
-        if state_in_conflict(state,n):
+        if state_in_conflict(state):
             for action in list(enumerate_actions(state)):
-                new_cost = state_in_conflict(action,n)
+                new_cost = state_in_conflict(action)
                 if new_cost < cost:
                     cost = new_cost
                     state = action
             if old_cost == cost:
                 state = create_random_state(n)
-                cost = state_in_conflict(state,n)
+                cost = state_in_conflict(state)
                 restarts+=1
         else:
             solution_found = True
@@ -100,54 +101,49 @@ def HillClimbing(n):
     print_state(state)
     print("Search Time: {}".format(time()-start))
 
+def SimulatedAnnealing(n):
+    state = create_random_state(n)
+    k = 10000
+    temp = k
+    solution_found = False
 
-class SimulatedAnnealing(object):
-    def __init__(self,n):
-        self.n = n
-        self.state = create_random_state(self.n)
-        self.k = 1000
-        self.temp = self.k
-        self.cost = None
-        self.solution_found = False
+    start = time()
+    for i in range(k):
+        #print("Temp: {}".format(temp),end='\r')
+        cost = state_in_conflict(state)
+        T = temp * (i/k)
+        #temp -= T
+        print(T, i/k, pow(T,i/k))
+        #Check if state is goal state
+        if cost:
+            #Generate random state by moving random queen to random row
+            random_neighbour = state[:]
+            random_neighbour[randrange(n)] = randrange(n)
+            random_neighbour_cost = state_in_conflict(random_neighbour)
 
-    
-    def random_select_neighbour(self):
-        random_queen = self.state[randrange(0,self.n)]
-        return random_queen
+            if random_neighbour_cost <= cost:
+                state = random_neighbour
+                cost = random_neighbour_cost
+            else:
+                state_change_probability = pow(e,(-(cost - random_neighbour_cost))/T) 
+                if state_change_probability > random():
+                    state = random_neighbour
+                    cost = random_neighbour_cost
+        else:
+            solution_found = True
+            break
+
+    print("Search Time: {}, Solution Found: {}".format(time()-start,solution_found))
+    if solution_found:
+        print_state(state)
 
 
-    def temp_func(self,n):
-        return pow(0.99,n)
-
-    def search(self):
-        n = 0
-        while not self.solution_found:
-            print("Temp: {}".format(self.temp),end='\r')
-            for _ in range(self.k):
-                self.cost = state_in_conflict(self.state,self.n)
-                if bool(self.cost):
-                    random_neighbour = self.random_select_neighbour()
-                    random_neighbour_cost = state_in_conflict(random_neighbour,self.n)
-
-                    if random_neighbour_cost <= self.cost:
-                        self.state = random_neighbour
-                        self.cost = random_neighbour_cost
-                    else:
-                        p = pow(e,-(self.cost - random_neighbour_cost)/self.temp) 
-                        if p > random():
-                            self.state = random_neighbour
-                            self.cost = random_neighbour_cost
-                else:
-                    self.solution_found = True
-                    print_state(self.state)
-                    break
-            self.temp -= self.temp_func(n)
-            n+=1
+        
 
 
 def main():
-    n = int(sys.argv[1])
-    HillClimbing(n)
+    #n = int(sys.argv[1])
+    SimulatedAnnealing(5)
 
 
 if __name__ == "__main__":
