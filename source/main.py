@@ -19,8 +19,8 @@ def create_random_state(n):
     return [randrange(0,n) for _ in range(n)]
 
 def state_in_conflict(state):
-    """Check if self state in conflict, returns True when any queen 
-    can attack any other, otherwise returns False(goal reached)"""
+    #Check if self state in conflict, returns True when any queen 
+    #can attack any other, otherwise returns False(goal reached)
     n = len(state)
     conflict_count = 0
     for i in range(n-1):
@@ -30,9 +30,9 @@ def state_in_conflict(state):
                 conflict_count+=1
     return conflict_count
 
-#Yields each possible state for each queen, where a queen can go up or down in its
-#column but does not move diagonally or horizontally
-def enumerate_actions(parent): 
+def enumerate_actions(parent):
+    #Yields each possible state for each queen, where a queen can go up or down in its
+    #column but does not move diagonally or horizontally 
     n = len(parent)
     for i in range(n):
         for j in range(n):
@@ -144,14 +144,11 @@ def SimulatedAnnealing(n):
 
         iteration+=1
         temp = temp_change(iteration)
+        print(temp,end='\r')
 
     print("Search Time: {}, Solution:\n".format(time()-start))
     print_state(state)
 
-
-def main():
-    n = int(sys.argv[1])
-    HillClimbing(n)
-
 if __name__ == "__main__":
-    main() 
+    n = int(sys.argv[1])
+    SimulatedAnnealing(n)
