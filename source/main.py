@@ -43,6 +43,8 @@ def enumerate_actions(parent):
 
 def BFS(n):
     initial_state = create_random_state(n)
+    print_state(initial_state)
+
     explored = set({})
     frontier = Queue()
     solutions = []
@@ -77,6 +79,7 @@ def BFS(n):
 
 def HillClimbing(n):
     state = create_random_state(n)
+    print_state(state)
     cost = state_in_conflict(state)
     solution_found = False
     restarts = 0
@@ -103,11 +106,11 @@ def HillClimbing(n):
 
 def SimulatedAnnealing(n):
     state = create_random_state(n)
-    k = 10000
-
-    temp_alpha = 0.99
+    print_state(state)
+    k = 15000
 
     #Get temperature with alpha^n where alpha is small change in T
+    temp_alpha = 0.99
     temp_change = lambda n: pow(temp_alpha,n)
 
     solution_found = False
@@ -117,7 +120,6 @@ def SimulatedAnnealing(n):
     start = time()
     
     while not solution_found:
-        
         for _ in range(k):
             cost = state_in_conflict(state)
             #Check if state is goal state
@@ -139,21 +141,17 @@ def SimulatedAnnealing(n):
             else:
                 solution_found = True
                 break
+
         iteration+=1
-        print(iteration,temp,end='\r')
         temp = temp_change(iteration)
-        
 
-    print("Search Time: {}, Solution:".format(time()-start))
+    print("Search Time: {}, Solution:\n".format(time()-start))
     print_state(state)
-
-
-        
 
 
 def main():
     n = int(sys.argv[1])
-    SimulatedAnnealing(n)
+    HillClimbing(n)
 
 if __name__ == "__main__":
     main() 
