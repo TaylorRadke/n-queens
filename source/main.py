@@ -18,25 +18,20 @@ def create_random_state(n):
     #Create list of queens where the index is the column and the value is the row
     return [randrange(0,n) for _ in range(n)]
 
-def state_in_conflict(state):
+def state_in_conflict(state,n):
     """Check if self state in conflict, returns True when any queen 
     can attack any other, otherwise returns False(goal reached)"""
-    attacking = 0
-    n = len(state)
+    conflict_count = 0
     for i in range(n-1):
         for j in range(i+1,n):
-            #if value is the same indicates queen on the same row
-            if state[i] == state[j]:
-                attacking += 1
-            else:
-                if abs(j - i) == abs(state[j] - state[i]):
-                    attacking+=1   
-    return attacking
+            #Check queens on same row or diagonal to each other
+            if state[i] == state[j] or abs(j - i) == abs(state[j] - state[i]):
+                conflict_count+=1
+    return conflict_count
 
+#Yields each possible state for each queen, where a queen can go up or down in its
+#column but does not move diagonally or horizontally
 def enumerate_actions(parent): 
-    """
-    Finds all possible legal moves for each queen on the board
-    """
     n = len(parent)
     for i in range(n):
         for j in range(n):
@@ -60,7 +55,7 @@ def BFS(n):
 
         state = frontier.get()
 
-        if not state_in_conflict(state):
+        if not state_in_conflict(state,n):
             if not state in solutions:
                 solutions.append(state)
                 print('\n')
@@ -70,6 +65,7 @@ def BFS(n):
         for action in list(enumerate_actions(state)):
             #Check if state has already been explored
             hashed_action = hash(str(action))
+
             if hashed_action not in explored:
                 #Add state to explored
                 explored.add(hashed_action)
@@ -80,7 +76,7 @@ def BFS(n):
 
 def HillClimbing(n):
     state = create_random_state(n)
-    cost = state_in_conflict(state)
+    cost = state_in_conflict(state,n)
     solution_found = False
     restarts = 0
 
@@ -88,15 +84,15 @@ def HillClimbing(n):
     while not solution_found:
         print("Restarts: {}".format(restarts),end='\r')
         old_cost = cost
-        if state_in_conflict(state):
+        if state_in_conflict(state,n):
             for action in list(enumerate_actions(state)):
-                new_cost = state_in_conflict(action)
+                new_cost = state_in_conflict(action,n)
                 if new_cost < cost:
                     cost = new_cost
                     state = action
             if old_cost == cost:
                 state = create_random_state(n)
-                cost = state_in_conflict(state)
+                cost = state_in_conflict(state,n)
                 restarts+=1
         else:
             solution_found = True
@@ -128,10 +124,10 @@ class SimulatedAnnealing(object):
         while not self.solution_found:
             print("Temp: {}".format(self.temp),end='\r')
             for _ in range(self.k):
-                self.cost = state_in_conflict(self.state)
+                self.cost = state_in_conflict(self.state,self.n)
                 if bool(self.cost):
                     random_neighbour = self.random_select_neighbour()
-                    random_neighbour_cost = state_in_conflict(random_neighbour)
+                    random_neighbour_cost = state_in_conflict(random_neighbour,self.n)
 
                     if random_neighbour_cost <= self.cost:
                         self.state = random_neighbour
@@ -151,7 +147,7 @@ class SimulatedAnnealing(object):
 
 def main():
     n = int(sys.argv[1])
-    BFS(n)
+    HillClimbing(n)
 
 
 if __name__ == "__main__":
