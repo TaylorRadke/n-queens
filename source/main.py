@@ -2,8 +2,33 @@ import sys
 from random import randrange,random
 from math import e
 from time import time
-from queue import Queue
 
+class Queue(list):
+    def __init__(self):
+        super().__init__(self)
+
+    def get(self):
+        value = self[0]
+        del self[0]
+        return value
+    
+    def put(self,item):
+        self.append(item)
+
+    def empty(self):
+        return len(self) == 0
+    
+    def _qsize(self):
+        return len(self)
+    
+    def __contains__(self,other):
+        for i in self:
+            if i == other:
+                return True
+        return False
+
+#Print the board state representation by printing Q when the index and value of the 
+# list are the same as in the nested loop, otherwise prints - or newline if inner loop reach n
 def print_state(state):
     n = len(state)
     print('\n')
@@ -15,10 +40,12 @@ def print_state(state):
                 print('\n')
     print('\n')
 
+#Create a random state by generating a random number for each index of the list indicating the row the queen is in
 def create_random_state(n):
     #Create list of queens where the index is the column and the value is the row
     return [randrange(0,n) for _ in range(n)]
 
+#yields true if two queens are on the same row or are diagonal to each other
 def conflict(state):
     n = len(state)
     for i in range(n-1):
@@ -26,6 +53,7 @@ def conflict(state):
             #Check queens on same row or diagonal to each other
             yield state[i] == state[j] or abs(j - i) == abs(state[j] - state[i])
 
+#Checks if given state is a goal. Immediately returns False if any of the yields from conflict are True otherwise returns True
 def is_goal_state(state):
     #Check if self state in conflict, returns True when any queen 
     #can attack any other, otherwise returns False(goal reached)
@@ -34,6 +62,7 @@ def is_goal_state(state):
             return False
     return True
 
+#increments cost counter when the yield from conflict is True then returns counter
 def state_cost(state):
     n = len(state)
     cost = 0
@@ -42,51 +71,50 @@ def state_cost(state):
             cost += 1
     return cost
 
-
+#Yields each legal state by checking each column and yielding new state where the current column is replaced with the
+#iterator value if it is not the current position and none of the queens to the left are in the same row
 def enumerate_actions(parent):
-    #Yields each possible state for each queen, where a queen can go up or down in its
-    #column but does not move diagonally or horizontally 
     n = len(parent)
     for i in range(n):
         for j in range(n):
-            if parent[i] != j:
+            if parent[i] != j and j not in parent[:i]:
                 state = parent[:]
                 state[i] = j
                 yield state
 
+#Breadth-First-Search using a Queue where each action yielded from enumerate_actions is added to the queue
+#Popping states from the queue and checking if they are goal state and they are not explored
 def BFS(n):
+    solutions = []
     initial_state = [0 for _ in range(n)]
     print_state(initial_state)
 
     explored = set({})
+    explored.add(tuple(initial_state))
     frontier = Queue()
-    
-    solutions = []
     frontier.put(initial_state)
+
     start = time()
 
     while not frontier.empty():
-        print("n: {}, Solutions: {}, Queue: {}"
-        .format(n,len(solutions),frontier._qsize()),end='\r')
+        print("n: {}, Solutions: {}, Queue: {}".format(n,len(solutions),frontier._qsize()),end='\r')
 
         state = frontier.get()
 
         for action in list(enumerate_actions(state)):
-            hash_action = hash(str(action))
-            if hash_action not in explored:
-                explored.add(hash_action)
+            if tuple(action) not in explored:
+                explored.add(tuple(action))
                 if is_goal_state(action):
                     if action not in solutions:
                         solutions.append(action)
                         print_state(action)
                 else:
                     frontier.put(action)
-            
 
     print("\nSearch time: {}".format(time()-start))
 
 def HillClimbing(n):
-    state = create_random_state(n)
+    state = [0 for _ in range(n)]
     print_state(state)
     cost = state_cost(state)
     solution_found = False
@@ -96,7 +124,7 @@ def HillClimbing(n):
     while not solution_found:
         print("Restarts: {}".format(restarts),end='\r')
         old_cost = cost
-        if is_goal_state(state):
+        if cost:
             for action in list(enumerate_actions(state)):
                 new_cost = state_cost(action)
                 if new_cost < cost:
@@ -157,6 +185,7 @@ def SimulatedAnnealing(n):
     print("Search Time: {}, Solution:\n".format(time()-start))
     print_state(state)
 
+
 if __name__ == "__main__":
     n = int(sys.argv[1])
-    BFS(n) 
+    BFS(n)
