@@ -29,15 +29,23 @@ class Queue(list):
 
 #Print the board state representation by printing Q when the index and value of the 
 # list are the same as in the nested loop, otherwise prints - or newline if inner loop reach n
-def print_state(state):
-    n = len(state)
+def print_state(state, n = None):
+    if n == None:
+        n = len(state)
+
     print('\n')
-    for i in range(n):
-        for j in range(n):
-            if state[j] == i: print("Q", end=" ")
-            else: print("-",end=" ")
-            if j == n-1:
-                print('\n')
+    if len(state) == 0:
+        for i in range(n):
+            for j in range(n):
+                print("-",end=" ")
+                if j == n-1:    print('\n')
+    else:
+        for i in range(n):
+            for j in range(n):
+                if state[j] == i: print("Q", end=" ")
+                else: print("-",end=" ")
+                if j == n-1:
+                    print('\n')
     print('\n')
 
 #Create a random state by generating a random number for each index of the list indicating the row the queen is in
@@ -54,9 +62,11 @@ def conflict(state):
             yield state[i] == state[j] or abs(j - i) == abs(state[j] - state[i])
 
 #Checks if given state is a goal. Immediately returns False if any of the yields from conflict are True otherwise returns True
-def is_goal_state(state):
-    #Check if self state in conflict, returns True when any queen 
-    #can attack any other, otherwise returns False(goal reached)
+def is_goal_state(state, n):
+    #Check if the given state is a goal state, returns False if the len of the state is less than the given n
+    #or if any conflict check yields True
+    if len(state) < n:  return False
+
     for i in conflict(state):
         if i:
             return False
@@ -73,24 +83,23 @@ def state_cost(state):
 
 #Yields each legal state by checking each column and yielding new state where the current column is replaced with the
 #iterator value if it is not the current position and none of the queens to the left are in the same row
-def enumerate_actions(parent):
-    n = len(parent)
+def enumerate_actions(state,n):
     for i in range(n):
-        for j in range(n):
-            if parent[i] != j and j not in parent[:i]:
-                state = parent[:]
-                state[i] = j
-                yield state
+        new_state = [val for val in state]
+        if i not in new_state:
+            new_state.append(i)
+            yield tuple(new_state)
+        
 
 #Breadth-First-Search using a Queue where each action yielded from enumerate_actions is added to the queue
 #Popping states from the queue and checking if they are goal state and they are not explored
 def BFS(n):
     solutions = []
-    initial_state = [0 for _ in range(n)]
-    print_state(initial_state)
+    initial_state = ()
+    print_state(initial_state,n)
 
     explored = set({})
-    explored.add(tuple(initial_state))
+    explored.add(initial_state)
     frontier = Queue()
     frontier.put(initial_state)
 
@@ -100,11 +109,11 @@ def BFS(n):
         print("n: {}, Solutions: {}, Queue: {}".format(n,len(solutions),frontier._qsize()),end='\r')
 
         state = frontier.get()
-
-        for action in list(enumerate_actions(state)):
-            if tuple(action) not in explored:
-                explored.add(tuple(action))
-                if is_goal_state(action):
+    
+        for action in tuple(enumerate_actions(state,n)):
+            if action not in explored:
+                explored.add(action)
+                if is_goal_state(action,n):
                     if action not in solutions:
                         solutions.append(action)
                         print_state(action)
@@ -125,7 +134,7 @@ def HillClimbing(n):
         print("Restarts: {}".format(restarts),end='\r')
         old_cost = cost
         if cost:
-            for action in list(enumerate_actions(state)):
+            for action in tuple(enumerate_actions(state,n)):
                 new_cost = state_cost(action)
                 if new_cost < cost:
                     cost = new_cost
