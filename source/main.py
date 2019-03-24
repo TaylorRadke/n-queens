@@ -2,30 +2,7 @@ import sys
 from random import randrange,random
 from math import e
 from time import time
-
-class Queue(list):
-    def __init__(self):
-        super().__init__(self)
-
-    def get(self):
-        value = self[0]
-        del self[0]
-        return value
-    
-    def put(self,item):
-        self.append(item)
-
-    def empty(self):
-        return len(self) == 0
-    
-    def _qsize(self):
-        return len(self)
-    
-    def __contains__(self,other):
-        for i in self:
-            if i == other:
-                return True
-        return False
+from queue import Queue
 
 #Print the board state representation by printing Q when the index and value of the 
 # list are the same as in the nested loop, otherwise prints - or newline if inner loop reach n
@@ -72,34 +49,18 @@ def is_goal_state(state, n):
             return False
     return True
 
-#increments cost counter when the yield from conflict is True then returns counter
-def state_cost(state):
-    n = len(state)
-    cost = 0
-    for i in conflict(state):
-        if i:
-            cost += 1
-    return cost
-
-#Yields each legal state by checking each column and yielding new state where the current column is replaced with the
-#iterator value if it is not the current position and none of the queens to the left are in the same row
-def enumerate_actions(state,n):
-    for i in range(n):
-        new_state = list(state[:])
-        new_state.append(i)
-        yield new_state
-        
-            
-def prune_enumerate_action(state,n):
-    for i in range(n):
-        if i not in state:
-            new_state = list(state[:])
-            new_state.append(i)
-            yield tuple(new_state)
-
 #Breadth-First-Search using a Queue where each action yielded from enumerate_actions is added to the queue
 #Popping states from the queue and checking if they are goal state and they are not explored
 def BFS(n):
+    #Yields each legal state by checking each column and yielding new state where the current column is replaced with the
+    #iterator value if it is not the current position and none of the queens to the left are in the same row
+    def enumerate_actions(state):
+        for i in range(n):
+            if i not in state:
+                new_state = list(state[:])
+                new_state.append(i)
+                yield tuple(new_state)
+
     solutions = []
     initial_state = ()
     print_state(initial_state,n)
@@ -116,7 +77,7 @@ def BFS(n):
 
         state = frontier.get()
     
-        for action in tuple(enumerate_actions(state,n)):
+        for action in tuple(enumerate_actions(state)):
             if action not in explored:
                 explored.add(action)
                 if is_goal_state(action,n):
@@ -128,37 +89,57 @@ def BFS(n):
 
     print("\nSearch time: {}".format(time()-start))
 
+
+def enumerate_actions(parent):
+    #Yields each possible state for each queen, where a queen can go up or down in its
+    #column but does not move diagonally or horizontally 
+    n = len(parent)
+    for i in range(n):
+        for j in range(n):
+            if parent[i] != j:
+                state = parent[:]
+                state[i] = j
+                yield state
+
+#increments cost counter when the yield from conflict is True then returns counter
+def state_cost(state):
+    n = len(state)
+    cost = 0
+    for i in conflict(state):
+        if i:
+            cost += 1
+    return cost
+
 def HillClimbing(n):
-    state = ()
-    print_state(state,n)
-    cost = n
+    state = [0 for _ in range(n)]
+    print_state(state)
+    cost = state_cost(state)
     solution_found = False
     restarts = 0
 
     start = time()
+
     while not solution_found:
-        #print("Restarts: {}".format(restarts),end='\r')
-
+        print("Restarts: {}".format(restarts),end='\r')
         old_cost = cost
-
-        if not is_goal_state(state,n):
-            for action in tuple(enumerate_actions(state,n)):
+        if cost:
+            for action in list(enumerate_actions(state)):
                 new_cost = state_cost(action)
                 if new_cost < cost:
                     cost = new_cost
                     state = action
-            if old_cost == cost and len(state) == n:
-                #Random restart, set first queen to random row in first column
-                state = (randrange(n),)
-                cost
+            if old_cost == cost:
+                state = create_random_state(n)
+                cost = state_cost(state)
                 restarts+=1
         else:
             solution_found = True
-
-    print("\nSearch Time: {}".format(time()-start))
+    #Print Solution
+    print_state(state)
+    print("Search Time: {}".format(time()-start))
 
 def SimulatedAnnealing(n):
-    state = create_random_state(n)
+    state = [0 for _ in range(n)]
     print_state(state)
     k = 15000
 
@@ -187,10 +168,10 @@ def SimulatedAnnealing(n):
                     state = random_neighbour
                     cost = random_neighbour_cost
                 else:
-                    state_change_probability = pow(e,-(random_neighbour_cost - cost)/temp)
+                    #Sets the probability that the state will go uphill (further from solution)
+                    state_change_probability = pow(e,(cost - random_neighbour_cost)/temp)
                     if state_change_probability >= random():
                         state = random_neighbour
-                        cost = random_neighbour_cost
             else:
                 solution_found = True
                 break
