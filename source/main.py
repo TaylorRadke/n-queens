@@ -85,11 +85,17 @@ def state_cost(state):
 #iterator value if it is not the current position and none of the queens to the left are in the same row
 def enumerate_actions(state,n):
     for i in range(n):
-        new_state = [val for val in state]
-        if i not in new_state:
+        new_state = list(state[:])
+        new_state.append(i)
+        yield new_state
+        
+            
+def prune_enumerate_action(state,n):
+    for i in range(n):
+        if i not in state:
+            new_state = list(state[:])
             new_state.append(i)
             yield tuple(new_state)
-        
 
 #Breadth-First-Search using a Queue where each action yielded from enumerate_actions is added to the queue
 #Popping states from the queue and checking if they are goal state and they are not explored
@@ -123,31 +129,33 @@ def BFS(n):
     print("\nSearch time: {}".format(time()-start))
 
 def HillClimbing(n):
-    state = [0 for _ in range(n)]
-    print_state(state)
-    cost = state_cost(state)
+    state = ()
+    print_state(state,n)
+    cost = n
     solution_found = False
     restarts = 0
 
     start = time()
     while not solution_found:
-        print("Restarts: {}".format(restarts),end='\r')
+        #print("Restarts: {}".format(restarts),end='\r')
+
         old_cost = cost
-        if cost:
+
+        if not is_goal_state(state,n):
             for action in tuple(enumerate_actions(state,n)):
                 new_cost = state_cost(action)
                 if new_cost < cost:
                     cost = new_cost
                     state = action
-            if old_cost == cost:
-                state = create_random_state(n)
-                cost = state_cost(state)
+            if old_cost == cost and len(state) == n:
+                #Random restart, set first queen to random row in first column
+                state = (randrange(n),)
+                cost
                 restarts+=1
         else:
             solution_found = True
-    #Print Solution
-    print_state(state)
-    print("Search Time: {}".format(time()-start))
+
+    print("\nSearch Time: {}".format(time()-start))
 
 def SimulatedAnnealing(n):
     state = create_random_state(n)
