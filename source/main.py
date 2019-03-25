@@ -55,6 +55,7 @@ def BFS(n,csv_w = None):
 
     #Yields all children states of the current states if there are no conflict
     def pruned_actions(state):
+        if (len(state) == n):   return
         for i in range(n):
             new_state = list(state[:])
             new_state.append(i)
@@ -64,6 +65,7 @@ def BFS(n,csv_w = None):
 
     #yields all new states by appending i from 0 to n to end of state
     def enumerate_actions(state):
+        if (len(state) == n):   return
         for i in range(n):
             new_state = list(state[:])
             new_state.append(i)
@@ -83,7 +85,9 @@ def BFS(n,csv_w = None):
     while not frontier.empty():
         state = frontier.get()
     
+    #uncomment whichever state enumeration to use
         for action in tuple(pruned_actions(state)):
+    #   for action in tuple(enumerate_action(state)):
             if action not in explored:
                 explored.add(action) 
                 if is_goal_state(action,n):
