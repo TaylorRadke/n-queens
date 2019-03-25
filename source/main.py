@@ -51,16 +51,23 @@ def is_goal_state(state, n):
 
 #Breadth-First-Search using a Queue where each action yielded from enumerate_actions is added to the queue
 #Popping states from the queue and checking if they are goal state and they are not explored
-def BFS(n,csv_w):
+def BFS(n,csv_w = None):
 
-    #Yields each legal state by checking each column and yielding new state where the current column is replaced with the
-    #iterator value if it is not the current position and none of the queens to the left are in the same row
+    #Yields all children states of the current states if there are no conflict
+    def pruned_actions(state):
+        for i in range(n):
+            new_state = list(state[:])
+            new_state.append(i)
+            
+            if is_goal_state(new_state,len(new_state)):
+                yield tuple(new_state)
+
+    #yields all new states by appending i from 0 to n to end of state
     def enumerate_actions(state):
         for i in range(n):
-            if i not in state:
-                new_state = list(state[:])
-                new_state.append(i)
-                yield tuple(new_state)
+            new_state = list(state[:])
+            new_state.append(i)
+            yield tuple(new_state)
 
     solutions = []
     initial_state = ()
@@ -76,7 +83,7 @@ def BFS(n,csv_w):
     while not frontier.empty():
         state = frontier.get()
     
-        for action in tuple(enumerate_actions(state)):
+        for action in tuple(pruned_actions(state)):
             if action not in explored:
                 explored.add(action) 
                 if is_goal_state(action,n):
@@ -86,7 +93,7 @@ def BFS(n,csv_w):
                     frontier.put(action)
 
     print("n: {}, Search time: {}, Solutions found: {}".format(n,(time()-start),len(solutions)))
-    csv_w.writerow([n,len(solutions),time()-start])
+    if csv_w:   csv_w.writerow([n,len(solutions),time()-start])
     # for solution in solutions:
     #     print_state(solution)
 
@@ -194,12 +201,12 @@ if __name__ == "__main__":
 
     #Breadth first search
     #BFS(n)
-
-    with open("hc_output.txt",'a',newline='') as file:
-        writer = csv.writer(file)
-        for n in range(20):
-            for _ in range(10):
-                HC(n,writer)
+    BFS(int(sys.argv[1]))
+    # with open("hc_output.txt",'a',newline='') as file:
+    #     writer = csv.writer(file)
+    #     for n in range(20):
+    #         for _ in range(10):
+    #             HC(n,writer)
 
     #HillClimbing Search
 
