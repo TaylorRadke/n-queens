@@ -3,6 +3,7 @@ from random import randrange,random
 from math import e
 from time import time
 from queue import Queue
+import csv
 
 #Print the board state representation by printing Q when the index and value of the 
 # list are the same as in the nested loop, otherwise prints - or newline if inner loop reach n
@@ -10,7 +11,6 @@ def print_state(state, n = None):
     if n == None:
         n = len(state)
 
-    print('\n')
     if len(state) == 0:
         for i in range(n):
             for j in range(n):
@@ -51,7 +51,8 @@ def is_goal_state(state, n):
 
 #Breadth-First-Search using a Queue where each action yielded from enumerate_actions is added to the queue
 #Popping states from the queue and checking if they are goal state and they are not explored
-def BFS(n):
+def BFS(n,csv_w):
+
     #Yields each legal state by checking each column and yielding new state where the current column is replaced with the
     #iterator value if it is not the current position and none of the queens to the left are in the same row
     def enumerate_actions(state):
@@ -63,7 +64,7 @@ def BFS(n):
 
     solutions = []
     initial_state = ()
-    print_state(initial_state,n)
+    #print_state(initial_state,n)
 
     explored = set({})
     explored.add(initial_state)
@@ -73,21 +74,22 @@ def BFS(n):
     start = time()
 
     while not frontier.empty():
-        print("n: {}, Solutions: {}, Queue: {}".format(n,len(solutions),frontier._qsize()),end='\r')
-
         state = frontier.get()
     
         for action in tuple(enumerate_actions(state)):
             if action not in explored:
-                explored.add(action)
+                explored.add(action) 
                 if is_goal_state(action,n):
                     if action not in solutions:
                         solutions.append(action)
-                        print_state(action)
                 else:
                     frontier.put(action)
 
-    print("\nSearch time: {}".format(time()-start))
+    print("n: {}, Search time: {}, Solutions found: {}".format(n,(time()-start),len(solutions)))
+    csv_w.writerow([n,len(solutions),time()-start])
+    # for solution in solutions:
+    #     print_state(solution)
+
 
 
 def enumerate_actions(parent):
@@ -110,7 +112,8 @@ def state_cost(state):
             cost += 1
     return cost
 
-def HillClimbing(n):
+#HillClimbing algorithm to find a single goal state
+def HC(n,csv_w):
     state = [0 for _ in range(n)]
     print_state(state)
     cost = state_cost(state)
@@ -138,7 +141,7 @@ def HillClimbing(n):
     print_state(state)
     print("Search Time: {}".format(time()-start))
 
-def SimulatedAnnealing(n):
+def SA(n):
     state = [0 for _ in range(n)]
     print_state(state)
     k = 15000
@@ -183,7 +186,22 @@ def SimulatedAnnealing(n):
     print("Search Time: {}, Solution:\n".format(time()-start))
     print_state(state)
 
-
 if __name__ == "__main__":
-    n = int(sys.argv[1])
-    BFS(n)
+    #Either set n as an argument on commandline or set it direcly below and uncomment whichever function to search with
+
+    #n = int(sys.argv[1])
+    #n = some integer
+
+    #Breadth first search
+    #BFS(n)
+
+    with open("hc_output.txt",'a',newline='') as file:
+        writer = csv.writer(file)
+        for n in range(20):
+            for _ in range(10):
+                HC(n,writer)
+
+    #HillClimbing Search
+
+    #Simulated Annealing Search
+    #SA(15)
