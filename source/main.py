@@ -25,11 +25,6 @@ def print_state(state, n = None):
                     print('\n')
     print('\n')
 
-#Create a random state by generating a random number for each index of the list indicating the row the queen is in
-def create_random_state(n):
-    #Create list of queens where the index is the column and the value is the row
-    return [randrange(0,n) for _ in range(n)]
-
 #yields true if two queens are on the same row or are diagonal to each other
 def conflict(state):
     n = len(state)
@@ -51,7 +46,7 @@ def is_goal_state(state, n):
 
 #Breadth-First-Search using a Queue where each action yielded from enumerate_actions is added to the queue
 #Popping states from the queue and checking if they are goal state and they are not explored
-def BFS(n,csv_w = None):
+def BFS(n,prune=False,csv_w = None):
 
     #Yields all children states of the current states if there are no conflict
     def pruned_actions(state):
@@ -86,7 +81,7 @@ def BFS(n,csv_w = None):
         state = frontier.get()
     
     #uncomment whichever state enumeration to use
-        for action in tuple(pruned_actions(state)):
+        for action in tuple(pruned_actions(state)) if prune else tuple(enumerate_actions(state)):
     #   for action in tuple(enumerate_action(state)):
             if action not in explored:
                 explored.add(action) 
@@ -96,16 +91,17 @@ def BFS(n,csv_w = None):
                 else:
                     frontier.put(action)
 
-    print("n: {}, Search time: {}, Solutions found: {}".format(n,(time()-start),len(solutions)))
-    if csv_w:   csv_w.writerow([n,len(solutions),time()-start])
-    # for solution in solutions:
-    #     print_state(solution)
+    if csv_w:   csv_w.writerow([prune,n,len(solutions),time()-start])
+    print("\nn: {}, Search time: {}, Solutions found: {}\n".format(n,(time()-start),len(solutions)))
+    for solution in solutions if n <= 8 else exit():
+        print_state(solution)
 
 
 
 def enumerate_actions(parent):
     #Yields each possible state for each queen, where a queen can go up or down in its
     #column but does not move diagonally or horizontally 
+
     n = len(parent)
     for i in range(n):
         for j in range(n):
@@ -116,7 +112,6 @@ def enumerate_actions(parent):
 
 #increments cost counter when the yield from conflict is True then returns counter
 def state_cost(state):
-    n = len(state)
     cost = 0
     for i in conflict(state):
         if i:
@@ -124,7 +119,7 @@ def state_cost(state):
     return cost
 
 #HillClimbing algorithm to find a single goal state
-def HC(n,csv_w):
+def HC(n,csv_w=None):
     state = [0 for _ in range(n)]
     print_state(state)
     cost = state_cost(state)
@@ -142,8 +137,9 @@ def HC(n,csv_w):
                 if new_cost < cost:
                     cost = new_cost
                     state = action
+                    break
             if old_cost == cost:
-                state = create_random_state(n)
+                state = [randrange(n) for _ in range(n)]
                 cost = state_cost(state)
                 restarts+=1
         else:
@@ -152,18 +148,18 @@ def HC(n,csv_w):
     print_state(state)
     print("Search Time: {}".format(time()-start))
 
-def SA(n):
-    state = [0 for _ in range(n)]
+def SA(n, temp_alpha = 0.99, k = 10000):
+    #Create an initial state where is column has a queen in a random row
+    state = [randrange(n) for _ in range(n)]
+    cost = state_cost(state)
     print_state(state)
-    k = 15000
 
     #Get temperature with alpha^n where alpha is small change in T
-    temp_alpha = 0.99
     temp_change = lambda n: pow(temp_alpha,n)
 
     solution_found = False
     iteration = 0
-    temp = temp_change(iteration)
+    temp = temp_change(k)
 
     start = time()
     
@@ -178,24 +174,24 @@ def SA(n):
                 
                 random_neighbour_cost = state_cost(random_neighbour)
                 
-                if random_neighbour_cost <= cost:
+                #Change state either if random state is better than current state or if
+                #A random number between 0 and 1 is less than or equal to the probability of
+                # e ^ (cost - random neighbour cost)/ current temp
+                #print(pow(e,-(cost - random_neighbour_cost)/temp))
+                if random_neighbour_cost <= cost or pow(e,(cost - random_neighbour_cost)/temp) >= random():
                     state = random_neighbour
                     cost = random_neighbour_cost
-                else:
-                    #Sets the probability that the state will go uphill (further from solution)
-                    state_change_probability = pow(e,(cost - random_neighbour_cost)/temp)
-                    if state_change_probability >= random():
-                        state = random_neighbour
             else:
                 solution_found = True
                 break
 
         iteration+=1
-        temp = temp_change(iteration)
+        temp = temp_change(k-iteration)
+        #print(temp)
         print(temp,end='\r')
-
-    print("Search Time: {}, Solution:\n".format(time()-start))
+    
     print_state(state)
+    print("Search Time: {}, Solution:\n".format(time()-start))
 
 if __name__ == "__main__":
     #Either set n as an argument on commandline or set it direcly below and uncomment whichever function to search with
@@ -205,12 +201,13 @@ if __name__ == "__main__":
 
     #Breadth first search
     #BFS(n)
-    BFS(int(sys.argv[1]))
     # with open("hc_output.txt",'a',newline='') as file:
     #     writer = csv.writer(file)
     #     for n in range(20):
     #         for _ in range(10):
     #             HC(n,writer)
+    
+    BFS(9,True)
 
     #HillClimbing Search
 
